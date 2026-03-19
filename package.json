@@ -2,7 +2,9 @@
   "name": "nrowa",
   "version": "1.0.0",
   "description": "Dream interpretation app on Celo blockchain",
+  "type": "module",
   "scripts": {
-    "dev": "npx http-server -p 3000 --cors"
+    "dev": "node server.js",
+    "start": "node server.js"
   }
 }
