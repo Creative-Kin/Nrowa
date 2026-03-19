@@ -1,0 +1,8 @@
+{
+  "name": "nrowa",
+  "version": "1.0.0",
+  "description": "Dream interpretation app on Celo blockchain",
+  "scripts": {
+    "dev": "npx http-server -p 3000 --cors"
+  }
+}
