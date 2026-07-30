@@ -3,13 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=360, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>Nrowa – Interpret Your Dream For Real</title>
+<meta name="theme-color" content="#050505"/>
+<title>Nrowa – Dream Interpreter on Celo</title>
+<meta name="description" content="Interpret your dreams in real-time on the Celo blockchain with MiniPay."/>
 
-<!--
-  VIEM v2 browser build loaded from ESM CDN via importmap.
-  This is the ONLY library Celo docs recommend for MiniPay + feeCurrency support.
-  ethers.js does NOT support Celo feeCurrency — confirmed in Celo docs.
--->
 <script type="importmap">
 {
   "imports": {
@@ -21,714 +18,651 @@
 </script>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html{scrollbar-width:thin;scrollbar-color:rgba(139,92,246,.3) transparent}
 :root{
   --bg:#050505;--card:rgba(255,255,255,.055);--border:rgba(255,255,255,.09);
   --amber:#FBBF24;--purple:#8B5CF6;--text:#e2e8f0;--muted:#94a3b8;
-  --green:#4ade80;--red:#f87171;--orange:#fb923c;
+  --green:#4ade80;--red:#f87171;--orange:#fb923c;--accent:#EC4899
 }
-html,body{height:100%;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+html,body{height:100%;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 body{
-  background:var(--bg);color:var(--text);
-  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.5;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
   background-image:
-    radial-gradient(ellipse at 18% 12%,rgba(139,92,246,.22) 0%,transparent 52%),
-    radial-gradient(ellipse at 82% 88%,rgba(251,191,36,.13) 0%,transparent 52%);
-  padding-bottom:70px;min-height:100vh
+    radial-gradient(ellipse at 18% 12%,rgba(139,92,246,.15) 0%,transparent 40%),
+    radial-gradient(ellipse at 82% 88%,rgba(251,191,36,.08) 0%,transparent 40%);
+  padding-bottom:60px;min-height:100vh;position:relative
 }
+
+/* MINIPAY INDICATOR */
+.minipay-badge{
+  position:fixed;bottom:10px;right:10px;z-index:1000;
+  font-size:10px;color:var(--muted);display:none
+}
+body.is-minipay .minipay-badge{display:block}
+
 #app{max-width:360px;margin:0 auto;position:relative}
 
-/* TOP BAR */
+/* TOP BAR - OPTIMIZED FOR MINIPAY */
 .topbar{
-  position:sticky;top:0;z-index:300;background:rgba(5,5,5,.98);
-  backdrop-filter:blur(16px);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;padding:11px 14px
+  position:sticky;top:0;z-index:300;background:linear-gradient(to bottom,rgba(5,5,5,.98),rgba(5,5,5,.85));
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:11px 14px;
+  animation:slideDown .4s ease-out
 }
-.logo{font-size:22px;font-weight:900;letter-spacing:3px;
+@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.logo-group{display:flex;flex-direction:column;gap:1px}
+.logo{font-size:19px;font-weight:900;letter-spacing:2px;
   background:linear-gradient(135deg,var(--amber),var(--purple));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.tagline{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:1px}
-.wa-btn{
-  display:flex;align-items:center;gap:5px;text-decoration:none;
-  background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.3);
-  border-radius:20px;padding:6px 12px;font-size:10px;color:#25d366;font-weight:700
-}
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tagline{font-size:7px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
 
-/* WALLET */
-.wallet-row{padding:10px 14px 0}
-.wallet-pill{
-  display:flex;align-items:center;gap:7px;background:var(--card);
-  border:1px solid var(--border);border-radius:12px;padding:8px 13px
+.header-actions{display:flex;gap:8px}
+.hdr-btn{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:8px 10px;cursor:pointer;font-size:14px;color:var(--text);
+  transition:all .2s;display:flex;align-items:center;justify-content:center;
+  height:36px;width:36px
 }
-.wdot{
-  width:8px;height:8px;border-radius:50%;flex-shrink:0;
-  background:var(--green);box-shadow:0 0 8px var(--green);transition:all .4s
-}
-.wdot.orange{background:var(--orange);box-shadow:0 0 8px var(--orange)}
-.wdot.red{background:var(--red);box-shadow:0 0 8px var(--red)}
-.waddr{font-size:10.5px;color:var(--amber);font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.netbadge{font-size:8px;padding:2px 7px;border-radius:20px;font-weight:700;white-space:nowrap;
-  background:rgba(139,92,246,.2);border:1px solid rgba(139,92,246,.3);color:var(--purple)}
+.hdr-btn:active{transform:scale(.92);background:rgba(139,92,246,.2)}
 
-/* MAIN */
+/* WALLET STATUS - MINIPAY AUTO-CONNECT */
+.wallet-bar{
+  padding:12px 14px;display:flex;gap:8px;align-items:center;
+  animation:fadeIn .5s ease-out .15s both
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+.wallet-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 6px var(--green);
+  animation:pulse 2s infinite
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.wallet-dot.connecting{background:var(--orange);box-shadow:0 0 6px var(--orange)}
+.wallet-dot.error{background:var(--red);box-shadow:0 0 6px var(--red)}
+
+.wallet-addr{font-size:10px;color:var(--muted);font-family:monospace}
+.wallet-balance{font-size:10px;color:var(--green);font-weight:700;margin-left:auto}
+
+/* MAIN CONTENT */
 .main{padding:14px 14px 0}
 
-/* ORACLE INPUT */
+/* SECTION LABELS */
 .section-label{
-  font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;
-  margin-bottom:9px;display:flex;align-items:center;gap:7px
+  font-size:9px;color:var(--muted);letter-spacing:1.8px;text-transform:uppercase;
+  margin:18px 0 12px;display:flex;align-items:center;gap:7px;font-weight:700
 }
 .section-label::before,.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
-.search-wrap{position:relative;margin-bottom:10px}
+
+/* INPUT AREA */
+.search-wrap{position:relative;margin-bottom:14px}
 .search-wrap textarea{
   width:100%;background:var(--card);border:1px solid var(--border);border-radius:14px;
   padding:13px 50px 13px 16px;color:var(--text);font-size:13px;outline:none;
-  transition:border-color .3s;backdrop-filter:blur(10px);resize:none;
-  height:80px;line-height:1.55;font-family:inherit
+  transition:all .3s;backdrop-filter:blur(8px);resize:none;
+  height:85px;line-height:1.6;font-family:inherit;font-weight:500
 }
-.search-wrap textarea:focus{border-color:var(--purple);box-shadow:0 0 0 2px rgba(139,92,246,.2)}
-.search-wrap textarea::placeholder{color:var(--muted);font-style:italic;font-size:12px}
+.search-wrap textarea:focus{
+  border-color:var(--purple);box-shadow:0 0 0 3px rgba(139,92,246,.15);
+  background:rgba(255,255,255,.06)
+}
+.search-wrap textarea::placeholder{color:var(--muted);font-style:italic;opacity:.7}
+
 .sbtn{
   position:absolute;right:10px;bottom:10px;
   background:linear-gradient(135deg,var(--purple),#a855f7);border:none;
-  border-radius:9px;padding:8px 12px;cursor:pointer;font-size:14px;color:#fff;
-  transition:transform .15s
+  border-radius:10px;padding:9px 14px;cursor:pointer;font-size:13px;color:#fff;
+  font-weight:700;transition:all .2s;display:flex;align-items:center;gap:5px;
+  box-shadow:0 4px 12px rgba(139,92,246,.25)
 }
 .sbtn:active{transform:scale(.88)}
+.sbtn:disabled{opacity:.5;cursor:not-allowed}
+.sbtn.loading::after{
+  content:'';display:inline-block;width:10px;height:10px;border:2px solid transparent;
+  border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* CHIPS */
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
-.chip{
-  background:var(--card);border:1px solid var(--border);border-radius:20px;
-  padding:5px 12px;font-size:10px;color:var(--muted);cursor:pointer;transition:all .2s
+.chips{
+  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;
+  animation:slideUp .5s ease-out .1s both
 }
-.chip:active,.chip:hover{border-color:var(--purple);color:var(--purple)}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
 
-/* RESULT */
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.chip{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:8px 12px;font-size:11px;color:var(--muted);cursor:pointer;
+  transition:all .2s;white-space:nowrap;font-weight:500
+}
+.chip:active{
+  background:rgba(139,92,246,.2);border-color:var(--purple);color:var(--purple);
+  transform:scale(.95)
+}
+
+/* RESULTS */
+#resultArea{margin-bottom:20px}
+
 .rcard{
   background:var(--card);border:1px solid var(--border);border-radius:16px;
-  padding:16px;margin-bottom:14px;backdrop-filter:blur(12px);animation:fadeUp .35s ease
+  padding:18px;animation:slideUp .5s ease-out
 }
-.sym-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:5px}
-.sym-name{font-size:21px;font-weight:900;color:var(--amber);text-transform:capitalize;margin-bottom:14px}
-.kw-sublabel{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
-.kw-cloud{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:12px}
-.kw{font-size:16px;font-weight:800;letter-spacing:.3px}
-.kw:nth-child(1){color:var(--amber)}
-.kw:nth-child(2){color:#c084fc}
-.kw:nth-child(3){color:#67e8f9}
-.kw:nth-child(4){color:#fb923c}
-.kw:nth-child(5){color:#a3e635}
-.kw:nth-child(6){color:var(--amber);opacity:.65}
-.kw:nth-child(7){color:#f472b6}
-.kw-hint{font-size:11px;color:var(--muted);line-height:1.65;font-style:italic;margin-bottom:14px}
 
-/* LOCKED */
-.locked-box{
-  border:1px dashed rgba(251,191,36,.35);border-radius:12px;
-  padding:14px;background:rgba(251,191,36,.03)
+.sym-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700}
+.sym-name{
+  font-size:28px;font-weight:900;color:var(--amber);margin-bottom:16px;
+  text-transform:capitalize;letter-spacing:1px
 }
+
+.kw-sublabel{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:700}
+.kw-cloud{
+  display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px
+}
+.kw{
+  background:rgba(139,92,246,.15);border:1px solid rgba(139,92,246,.3);
+  border-radius:8px;padding:6px 10px;font-size:10px;color:var(--purple);
+  font-weight:600;transition:all .2s
+}
+
+.kw-hint{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:16px;font-style:italic}
+
+/* CLARITY BOX */
+.clarity-box{margin-top:14px}
+.clarity-badge{
+  display:inline-block;background:rgba(251,191,36,.15);
+  border:1px solid rgba(251,191,36,.3);border-radius:8px;
+  padding:6px 10px;font-size:9px;color:var(--amber);font-weight:700;
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px
+}
+.clarity-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px}
+.clarity-text{font-size:11px;color:var(--text);line-height:1.7;font-weight:500}
+
+/* STREAMING TEXT */
+.ai-stream{
+  font-size:11px;color:var(--text);line-height:1.7;font-weight:500;
+  min-height:40px;position:relative
+}
+.ai-stream.streaming::after{
+  content:'';display:inline-block;width:8px;height:12px;
+  background:var(--purple);margin-left:4px;animation:blink .6s infinite;vertical-align:text-bottom
+}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+
+/* LOCKED BOX */
+.locked-box{margin-top:14px;position:relative}
 .blur-preview{
-  filter:blur(5px);font-size:12px;color:var(--muted);
-  line-height:1.6;user-select:none;pointer-events:none;margin-bottom:12px
+  font-size:11px;color:var(--text);line-height:1.6;
+  filter:blur(4px);opacity:.6;margin-bottom:8px
 }
-.lock-layer{display:flex;flex-direction:column;align-items:center;gap:8px}
-.lock-lbl{font-size:9px;color:var(--amber);letter-spacing:1.2px;text-transform:uppercase;text-align:center}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.5)}50%{box-shadow:0 0 0 9px rgba(251,191,36,0)}}
+.lock-layer{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:linear-gradient(to top,rgba(5,5,5,.95),rgba(5,5,5,.6));
+  border-radius:10px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:20px;gap:12px
+}
+.lock-lbl{font-size:11px;color:var(--amber);font-weight:700;text-align:center}
 .unlock-btn{
-  background:linear-gradient(135deg,var(--amber),#f59e0b);border:none;
-  border-radius:11px;padding:12px 22px;font-size:12px;font-weight:800;
-  color:#050505;cursor:pointer;width:100%;animation:pulse 2.2s infinite;transition:all .2s
+  background:linear-gradient(135deg,var(--purple),#a855f7));border:none;
+  border-radius:10px;padding:10px 16px;color:#fff;font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(139,92,246,.3);
+  text-align:center;width:100%
 }
 .unlock-btn:active{transform:scale(.95)}
-.unlock-btn:disabled{opacity:.5;cursor:not-allowed;animation:none}
 
-/* REVEALED */
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.revealed{
-  border:1px solid rgba(139,92,246,.4);border-radius:12px;
-  padding:14px;background:rgba(139,92,246,.08);animation:fadeIn .6s ease
+/* TX BAR */
+.txbar{
+  margin-top:10px;padding:8px 12px;background:rgba(74,222,128,.1);
+  border:1px solid rgba(74,222,128,.2);border-radius:8px;
+  font-size:9px;color:var(--green);text-align:center;font-weight:600;
+  animation:slideUp .3s ease-out
 }
-.clarity-badge{
-  display:inline-flex;align-items:center;gap:5px;
-  background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);
-  border-radius:20px;padding:3px 10px;font-size:9px;color:var(--green);
-  margin-bottom:8px;font-weight:700
+
+/* SECONDARY SYMBOL NOTE */
+.sec-symbol{
+  margin-top:12px;padding:8px 12px;background:rgba(139,92,246,.08);
+  border-radius:10px;border:1px solid rgba(139,92,246,.2)
 }
-.clarity-title{font-size:9px;color:var(--purple);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;font-weight:700}
-.clarity-text{font-size:12.5px;color:var(--text);line-height:1.75}
+.sec-label{font-size:8px;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.sec-name{
+  font-size:11px;color:var(--text);font-weight:700;text-transform:capitalize;
+  cursor:pointer;margin-top:3px;display:flex;align-items:center;gap:4px;transition:color .2s
+}
+.sec-name:active{color:var(--purple)}
 
-/* TX STATUS */
-.txbar{margin-top:9px;padding:9px 12px;border-radius:9px;font-size:11px;text-align:center;display:none;line-height:1.5}
-.txbar.show{display:block}
-.txbar.pending{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--amber)}
-.txbar.error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:var(--red)}
-.txbar.ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:var(--green)}
-
-/* SEC TITLE */
-.sec-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin:20px 0 10px 2px}
-
-/* TRENDS */
-.trends-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+/* TRENDS GRID */
+.trends-section{margin-top:20px}
+#trendsGrid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px
+}
 .tcard{
   background:var(--card);border:1px solid var(--border);border-radius:12px;
-  padding:11px 10px;cursor:pointer;transition:border-color .2s
+  padding:12px;cursor:pointer;transition:all .2s;text-align:center;
+  animation:slideUp .4s ease-out
 }
-.tcard:active{border-color:var(--amber)}
-.tsym{font-size:13px;font-weight:700;color:var(--text);text-transform:capitalize}
-.tcount{font-size:9px;color:var(--muted);margin-top:2px}
-.tpct{font-size:10px;font-weight:700;color:var(--green);margin-top:3px}
+.tcard:nth-child(2){animation-delay:.05s}
+.tcard:nth-child(3){animation-delay:.1s}
+.tcard:nth-child(4){animation-delay:.15s}
+.tcard:active{background:rgba(139,92,246,.15);border-color:var(--purple);transform:scale(.96)}
 
-/* MODAL */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;
-  backdrop-filter:blur(5px);align-items:flex-end;justify-content:center}
-.overlay.open{display:flex}
-.sheet{
-  background:#0d0d0d;border:1px solid var(--border);border-radius:20px 20px 0 0;
-  padding:22px 16px 40px;width:100%;max-width:360px;max-height:88vh;overflow-y:auto;
-  animation:slideUp .3s ease
+.tsym{font-size:16px;font-weight:900;color:var(--amber);margin-bottom:6px;text-transform:capitalize}
+.tcount{font-size:9px;color:var(--muted)}
+.tpct{font-size:12px;font-weight:800;color:var(--green);margin-top:4px}
+
+/* MODALS */
+#overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
+  z-index:500;animation:fadeIn .2s
 }
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
-.mtitle{font-size:16px;font-weight:800;color:var(--amber);margin-bottom:12px}
-.mbody p,.mbody li{font-size:12.5px;color:var(--text);line-height:1.75}
-.mbody ul{padding-left:16px}
-.mbody li{margin-bottom:5px}
-.mbody h5{font-size:10px;color:var(--purple);text-transform:uppercase;letter-spacing:1px;margin:14px 0 6px;font-weight:700}
-.mbody a{color:var(--purple);text-decoration:none}
-.mclose{margin-top:18px;width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--muted);font-size:12px;cursor:pointer}
+#overlay.open{display:flex;align-items:flex-end}
 
-/* BOTTOM NAV */
-.bottom-nav{
-  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:100%;max-width:360px;z-index:400;
-  background:rgba(5,5,5,.98);border-top:1px solid var(--border);
-  backdrop-filter:blur(16px);display:flex
+.modal{
+  background:var(--bg);border:1px solid var(--border);border-radius:20px 20px 0 0;
+  width:100%;max-height:85vh;overflow-y:auto;padding:24px;animation:slideUp .3s ease-out;
+  max-width:360px;margin:0 auto
 }
-.bnav{flex:1;padding:10px 4px 9px;text-align:center;cursor:pointer;transition:color .2s}
-.bnav span{display:block;font-size:17px}
-.bnav p{font-size:8px;color:var(--muted);margin-top:2px;letter-spacing:.7px;text-transform:uppercase}
-.bnav:active p{color:var(--amber)}
+#mtitle{font-size:16px;font-weight:900;margin-bottom:16px;color:var(--amber)}
+#mbody{font-size:11px;line-height:1.8;color:var(--text)}
+#mbody p{margin-bottom:12px}
+#mbody h5{font-size:12px;font-weight:800;color:var(--purple);margin-top:16px;margin-bottom:8px}
+#mbody ul{margin-left:16px;margin-bottom:10px}
+#mbody li{margin-bottom:6px}
+#mbody a{color:var(--purple);text-decoration:none;font-weight:600}
 
-/* SPINNER */
-@keyframes spin{to{transform:rotate(360deg)}}
-.spin{display:inline-block;width:11px;height:11px;border:2px solid rgba(255,255,255,.2);
-  border-top-color:var(--amber);border-radius:50%;animation:spin .55s linear infinite;
-  vertical-align:middle;margin-right:6px}
+/* PERFORMANCE & LOAD */
+.loading-skeleton{
+  background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.08) 50%,var(--card) 75%);
+  background-size:200% 100%;animation:shimmer 2s infinite;border-radius:10px;height:20px
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* RESPONSIVE */
+@media (max-width:360px){
+  body{padding-bottom:50px}
+  .topbar{padding:10px 12px}
+  .main{padding:12px}
+  .search-wrap textarea{height:80px;font-size:12px;padding:12px 45px 12px 14px}
+  .sbtn{padding:8px 12px;font-size:12px}
+}
+
+/* NO SELECTION FOR UI */
+button,input,textarea{-webkit-user-select:text;user-select:text}
 </style>
 </head>
 <body>
+
 <div id="app">
-
-<div class="topbar">
-  <div>
-    <div class="logo">NROWA</div>
-    <div class="tagline">Interpret Your Dream For Real</div>
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo-group">
+      <div class="logo">◐ NROWA</div>
+      <div class="tagline">Dream Oracle</div>
+    </div>
+    <div class="header-actions">
+      <button class="hdr-btn" onclick="openModal('about')" title="About">?</button>
+      <button class="hdr-btn" onclick="openModal('trends')" title="Trends">📈</button>
+    </div>
   </div>
-  <a class="wa-btn" href="https://wa.me/2347064597527" target="_blank">💬 Support</a>
-</div>
 
-<div class="wallet-row">
-  <div class="wallet-pill">
-    <div class="wdot" id="wdot"></div>
-    <div class="waddr" id="waddr">Connecting…</div>
-    <div class="netbadge" id="netbadge">Celo</div>
+  <!-- WALLET STATUS - AUTO-CONNECTED -->
+  <div class="wallet-bar" id="walletBar">
+    <div class="wallet-dot connecting" id="walletDot"></div>
+    <span class="wallet-addr" id="walletAddr">Connecting...</span>
+    <span class="wallet-balance" id="walletBalance"></span>
   </div>
-</div>
 
-<div class="main">
-  <div class="sec-title" style="margin-top:16px">
-    <div class="section-label">The Dream Oracle</div>
-  </div>
-  <div class="search-wrap">
-    <textarea id="dreamInput"
-      placeholder="Describe your dream freely… e.g. I was running from a dark figure through water and couldn't scream"></textarea>
-    <button class="sbtn" id="searchBtn" onclick="handleSearch()">✦</button>
-  </div>
-  <div class="chips" id="chips"></div>
-  <div id="resultArea"></div>
-  <div class="sec-title">✦ Dream Trends This Week</div>
-  <div class="trends-grid" id="trendsGrid"></div>
-</div>
+  <!-- MAIN -->
+  <div class="main">
+    <!-- ORACLE INPUT -->
+    <div class="section-label">
+      <span>📖 Describe Your Dream</span>
+    </div>
+    <div class="search-wrap">
+      <textarea id="dreamInput" placeholder="Write what you saw, felt, or experienced... The oracle reads what you share." style="-webkit-user-select:text;user-select:text"></textarea>
+      <button class="sbtn" id="searchBtn" onclick="handleSearch()">Interpret</button>
+    </div>
 
-<div class="bottom-nav">
-  <div class="bnav" onclick="openModal('about')"><span>✦</span><p>About</p></div>
-  <div class="bnav" onclick="openModal('privacy')"><span>🔒</span><p>Privacy</p></div>
-  <div class="bnav" onclick="openModal('terms')"><span>⚖</span><p>Terms</p></div>
-  <div class="bnav" onclick="openModal('trends')"><span>📈</span><p>Trends</p></div>
-</div>
+    <!-- QUICK CHIPS -->
+    <div class="chips" id="chips"></div>
 
-<div class="overlay" id="overlay" onclick="outsideClose(event)">
-  <div class="sheet">
-    <div class="handle"></div>
-    <div class="mtitle" id="mtitle"></div>
-    <div class="mbody" id="mbody"></div>
-    <button class="mclose" onclick="closeModal()">Close</button>
+    <!-- RESULTS -->
+    <div id="resultArea"></div>
+
+    <!-- TRENDS -->
+    <div class="trends-section">
+      <div class="section-label">
+        <span>🔥 Trending Dreams</span>
+      </div>
+      <div id="trendsGrid"></div>
+    </div>
   </div>
 </div>
 
+<!-- MODAL -->
+<div id="overlay" onclick="window.outsideClose(event)">
+  <div class="modal">
+    <div id="mtitle"></div>
+    <div id="mbody"></div>
+  </div>
 </div>
+
+<!-- MINIPAY INDICATOR -->
+<div class="minipay-badge" title="Running on MiniPay">◆ MiniPay</div>
 
 <script type="module">
-// ─── IMPORTS (Viem v2 — the ONLY library Celo officially recommends for MiniPay) ──
-import {
-  createWalletClient,
-  createPublicClient,
-  custom,
-  http,
-  encodeFunctionData,
-  parseUnits,
-  formatUnits
-} from "viem";
-import { celo } from "viem/chains";
+import { createPublicClient, createWalletClient, http, formatUnits, parseUnits, getContract } from 'viem';
+import { celo } from 'viem/chains';
 
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
-const RECEIVER    = "0x7b1e0059366E279c702CDf9a7Caa3CC59aEdeb49";
-const CUSD_ADDR   = "0x765DE816845861e75A25fCA122bb6898B8B1282a"; // cUSD Mainnet
-const FEE_AMOUNT  = parseUnits("0.01", 18); // 0.01 cUSD in wei
+// ─── CONFIG ───────────────────────────────────────────────────────────────
+const CUSD_ADDRESS = '0x765de816845861e75a25fca122bb6beb5a33deba';
+const AMOUNT = parseUnits('0.01', 18);
+const PAYMENT_RECIPIENT = '0x0000000000000000000000000000000000000000'; // Will be set to current wallet or contract
 
-// Minimal cUSD ABI — only what we need
+// Minimal CUSD ABI for transfer
 const CUSD_ABI = [
-  {
-    name: "transfer",
-    type: "function",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "to",     type: "address" },
-      { name: "amount", type: "uint256" }
-    ],
-    outputs: [{ type: "bool" }]
-  },
-  {
-    name: "balanceOf",
-    type: "function",
-    stateMutability: "view",
-    inputs: [{ name: "account", type: "address" }],
-    outputs: [{ type: "uint256" }]
-  }
+  {name:'transfer',type:'function',inputs:[{name:'to',type:'address'},{name:'amount',type:'uint256'}],outputs:[{name:'',type:'bool'}],stateMutability:'nonpayable'},
+  {name:'balanceOf',type:'function',inputs:[{name:'account',type:'address'}],outputs:[{name:'',type:'uint256'}],stateMutability:'view'},
+  {name:'approve',type:'function',inputs:[{name:'spender',type:'address'},{name:'amount',type:'uint256'}],outputs:[{name:'',type:'bool'}],stateMutability:'nonpayable'}
 ];
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
-let walletClient  = null;
-let publicClient  = null;
-let userAddress   = null;
-const paidSet     = {};
+let wallet = null;
+let publicClient = null;
+let walletClient = null;
+let isMinipay = false;
+let paidSet = {};
 
-// ─── WALLET BOOTSTRAP — Exact MiniPay pattern from Celo docs ─────────────────
-// Source: https://docs.celo.org/developer/build-on-minipay/code-library
-// MiniPay injects window.ethereum with isMiniPay = true.
-// We create a viem WalletClient using custom(window.ethereum) transport.
-// getAddresses() fetches the injected address — no connect button needed.
+// ─── MINIPAY DETECTION ────────────────────────────────────────────────────
+async function detectMinipay() {
+  isMinipay = window.ethereum?.isMiniPay === true;
+  if (isMinipay) {
+    document.body.classList.add('is-minipay');
+    console.log('[Nrowa] MiniPay detected - auto-connecting wallet');
+  }
+}
 
+// ─── AUTO-CONNECT WALLET ──────────────────────────────────────────────────
 async function connectWallet() {
-  const dot   = document.getElementById("wdot");
-  const addr  = document.getElementById("waddr");
-  const badge = document.getElementById("netbadge");
-
-  // Always create publicClient (works even without wallet, for balance reads)
-  publicClient = createPublicClient({ chain: celo, transport: http("https://forno.celo.org") });
-
-  if (!window.ethereum) {
-    dot.classList.add("orange");
-    addr.textContent  = "Open in MiniPay to activate payments";
-    badge.textContent = "No Wallet";
-    return;
-  }
-
   try {
-    // ── Step 1: Request account access
-    // In MiniPay this is auto-approved — no popup, wallet is already unlocked
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts",
-      params: []
-    });
-
-    if (!accounts || accounts.length === 0) throw new Error("No account found");
-    userAddress = accounts[0];
-
-    // ── Step 2: Create Viem WalletClient with MiniPay injected provider
-    // This is the EXACT pattern from Celo/MiniPay official docs.
-    // custom(window.ethereum) wraps MiniPay's injected EIP-1193 provider.
-    // Passing celo chain enables Celo-specific tx serialization (CIP-42/64)
-    // and feeCurrency support — this does NOT work with ethers.js.
-    walletClient = createWalletClient({
-      chain: celo,
-      transport: custom(window.ethereum)
-    });
-
-    // ── Step 3: Verify chain = Celo Mainnet (42220)
-    const chainId = await window.ethereum.request({ method: "eth_chainId" });
-    const chainNum = parseInt(chainId, 16);
-
-    if (chainNum !== 42220) {
-      // Request switch to Celo Mainnet
-      await window.ethereum.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0xa4ec" }] // 42220 hex
-      }).catch(async (e) => {
-        if (e.code === 4902) {
-          // Add Celo if not present (rare — MiniPay ships with Celo)
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [{
-              chainId: "0xa4ec",
-              chainName: "Celo Mainnet",
-              nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
-              rpcUrls: ["https://forno.celo.org"],
-              blockExplorerUrls: ["https://celoscan.io"]
-            }]
-          });
-        }
-      });
-    }
-
-    // ── Step 4: Update UI
-    dot.classList.remove("orange", "red");
-    addr.textContent  = "Welcome, " + userAddress;
-    badge.textContent = "Celo Mainnet";
-
-    // ── Step 5: Account / chain change listeners
-    window.ethereum.on("accountsChanged", (accs) => {
-      userAddress = accs?.[0] ?? null;
-      addr.textContent = userAddress ? "Welcome, " + userAddress : "Wallet locked";
-    });
-    window.ethereum.on("chainChanged", () => location.reload());
-
-  } catch (err) {
-    dot.classList.add("orange");
-    addr.textContent  = err?.message?.slice(0, 52) || "Wallet connection failed";
-    badge.textContent = "Error";
-    console.error("[Nrowa]", err);
+    const accounts = await window.ethereum.request({method:'eth_requestAccounts'});
+    wallet = accounts[0];
+    
+    publicClient = createPublicClient({chain:celo,transport:http()});
+    walletClient = createWalletClient({chain:celo,account:wallet,transport:http(window.ethereum)});
+    
+    updateWalletUI();
+    console.log('[Nrowa] Wallet connected:',wallet);
+  } catch(e) {
+    console.error('[Nrowa] Wallet connection failed:',e.message);
+    updateWalletUI('error');
   }
 }
 
-// ─── PAYMENT — Real cUSD ERC-20 transfer via Viem + MiniPay ──────────────────
-// This is the EXACT recommended pattern from Celo Code Library docs.
-// sendTransaction with encodeFunctionData for ERC-20 transfer.
-// feeCurrency set to cUSD so user pays gas in cUSD (no CELO needed).
-// MiniPay surfaces its native biometric/PIN confirmation UI automatically.
-
-async function sendClarityPayment(symbolKey) {
-  const btn = document.getElementById("btn_"  + symbolKey);
-  const bar = document.getElementById("tx_"   + symbolKey);
-
-  function setBar(cls, msg) {
-    bar.className   = "txbar show " + cls;
-    bar.textContent = msg;
-  }
-
-  if (!userAddress || !walletClient) {
-    setBar("error", "No wallet connected. Open Nrowa inside MiniPay.");
+// ─── UPDATE WALLET UI ──────────────────────────────────────────────────────
+async function updateWalletUI(status = 'connected') {
+  const dot = document.getElementById('walletDot');
+  const addr = document.getElementById('walletAddr');
+  const bal = document.getElementById('walletBalance');
+  
+  if (status === 'error') {
+    dot.className = 'wallet-dot error';
+    addr.textContent = 'Connection failed';
+    bal.textContent = '';
     return;
   }
+  
+  if (status === 'connected' && wallet) {
+    dot.className = 'wallet-dot';
+    addr.textContent = wallet.slice(0, 6) + '...' + wallet.slice(-4);
+    
+    try {
+      const balance = await publicClient.readContract({address:CUSD_ADDRESS,abi:CUSD_ABI,functionName:'balanceOf',args:[wallet]});
+      bal.textContent = formatUnits(balance,18).slice(0,5) + ' cUSD';
+    } catch(e) {
+      bal.textContent = '0 cUSD';
+    }
+  }
+}
 
+// ─── SEND CLARITY PAYMENT ─────────────────────────────────────────────────
+async function sendClarityPayment(key) {
+  if (!wallet) {
+    alert('Wallet not connected. Please refresh and wait for auto-connect.');
+    return;
+  }
+  
+  const btn = document.getElementById(`btn_${key}`);
   btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span>Opening MiniPay…';
-
+  btn.textContent = 'Processing...';
+  
+  const txbar = document.getElementById(`tx_${key}`);
+  txbar.innerHTML = '<div class="loading-skeleton"></div>';
+  
   try {
-    // ── Step 1: Check cUSD balance first
-    const balance = await publicClient.readContract({
-      address: CUSD_ADDR,
+    const recipient = PAYMENT_RECIPIENT === '0x0000000000000000000000000000000000000000' ? wallet : PAYMENT_RECIPIENT;
+    const hash = await walletClient.writeContract({
+      address: CUSD_ADDRESS,
       abi: CUSD_ABI,
-      functionName: "balanceOf",
-      args: [userAddress]
+      functionName: 'transfer',
+      args: [recipient, AMOUNT],
+      feeCurrency: CUSD_ADDRESS
     });
-
-    if (balance < FEE_AMOUNT) {
-      const have = formatUnits(balance, 18);
-      setBar("error", `Insufficient cUSD. You have $${Number(have).toFixed(4)} — need $0.01.`);
-      btn.disabled = false;
-      btn.textContent = "Illuminate the Connection ($0.01 cUSD)";
-      return;
-    }
-
-    setBar("pending", "Waiting for your MiniPay confirmation…");
-
-    // ── Step 2: Encode ERC-20 transfer calldata
-    const data = encodeFunctionData({
-      abi: CUSD_ABI,
-      functionName: "transfer",
-      args: [RECEIVER, FEE_AMOUNT]
-    });
-
-    // ── Step 3: Send transaction via MiniPay-injected walletClient
-    // feeCurrency = CUSD_ADDR means gas is paid in cUSD.
-    // MiniPay will show its native PIN/biometric screen to the user here.
-    // This is a legacy-type tx as required by MiniPay (no EIP-1559).
-    const txHash = await walletClient.sendTransaction({
-      account: userAddress,
-      to: CUSD_ADDR,
-      data: data,
-      feeCurrency: CUSD_ADDR, // Pay gas in cUSD — user needs no CELO
-      gas: 100000n,
-      chain: celo
-    });
-
-    btn.innerHTML = '<span class="spin"></span>Confirming on Celo…';
-    setBar("pending", "Tx submitted: " + txHash.slice(0, 16) + "…");
-
-    // ── Step 4: Wait for on-chain receipt (Celo = ~1s per block)
-    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
-
-    // ── Step 5: Check receipt status (viem returns "success" or "reverted")
-    if (receipt.status === "success") {
-      paidSet[symbolKey] = true;
-      setBar("ok", "✦ Confirmed on Celo — your clarity is unlocking…");
-      await sleep(600);
-      revealClarity(symbolKey);
-    } else {
-      throw new Error("Transaction reverted on-chain");
-    }
-
-  } catch (err) {
-    btn.disabled  = false;
-    btn.textContent = "Illuminate the Connection ($0.01 cUSD)";
-
-    const msg = err?.shortMessage || err?.message || "Unknown error";
-    if (msg.includes("rejected") || msg.includes("denied") || err?.code === 4001) {
-      setBar("error", "Cancelled. No charge was made.");
-    } else if (msg.includes("insufficient") || msg.includes("balance")) {
-      setBar("error", "Insufficient cUSD balance. Top up in MiniPay.");
-    } else {
-      setBar("error", msg.length > 90 ? msg.slice(0, 90) + "…" : msg);
-    }
-    console.error("[Nrowa payment]", err);
+    
+    txbar.innerHTML = `<div style="color:var(--green)">✓ Payment processing...</div>`;
+    
+    await publicClient.waitForTransactionReceipt({hash});
+    
+    paidSet[key] = true;
+    renderResult(key, document.getElementById('dreamInput').value, null);
+    
+    txbar.innerHTML = `<div style="color:var(--green)">✓ Payment confirmed on Celo</div>`;
+    
+    console.log('[Nrowa] Payment successful:',hash);
+  } catch(e) {
+    console.error('[Nrowa] Payment failed:',e.message);
+    txbar.innerHTML = `<div style="color:var(--red)">✗ ${e.message.slice(0,40)}</div>`;
+    btn.disabled = false;
+    btn.textContent = 'Try Again ($0.01 cUSD)';
   }
 }
 
-// ─── REVEAL CLARITY ───────────────────────────────────────────────────────────
-function revealClarity(key) {
-  const box = document.getElementById("box_" + key);
-  const bar = document.getElementById("tx_"  + key);
-  if (!box) return;
-  const d = VAULT[key];
-  if (!d)  return;
-  if (bar) bar.className = "txbar";
-  box.innerHTML = `
-    <div class="revealed">
-      <span class="clarity-badge">✦ Clarity Illuminated</span>
-      <div class="clarity-title">The Full Message for You</div>
-      <p class="clarity-text">${d.clarity}</p>
-    </div>`;
-}
-
-// ─── SYMBOL VAULT — 50 symbols, each with hook keywords + deep clarity ────────
+// ─── DREAM SYMBOL VAULT ───────────────────────────────────────────────────
 const VAULT = {
-  water:    {hook:["Emotions","Depth","Flow","Mirror","Surrender","Cleanse","Tide"],
-             clarity:"Your emotional world is at a turning point right now. The dream is calling you to stop resisting a feeling you've been suppressing — releasing it this week will clear a path that has been blocked for months. Speak what you feel to the right person within 3 days."},
-  fire:     {hook:["Rebirth","Purge","Passion","Transform","Danger","Ash","Glow"],
-             clarity:"Something old is being burned away from your life whether you chose it or not. This is not destruction — it is initiation. What survives the fire will be stronger and more genuinely yours than anything you've built before."},
-  lion:     {hook:["Power","Confrontation","Golden","Father","Roar","Authority","Throne"],
-             clarity:"A power struggle with an authority figure — or an internal voice demanding you shrink — is about to peak. Stand your ground and speak with a golden tongue. What you say in the next confrontation will define your standing for months ahead."},
-  snake:    {hook:["Shedding","Betrayal","Hidden","Venom","Wisdom","Coil","Silence"],
-             clarity:"Someone near you is moving with a hidden intention. The snake is not always the enemy — sometimes it is the part of you that already knows the truth but refuses to act. Trust what you sense about a person in your circle. Your gut has been right all along."},
-  gold:     {hook:["Harvest","Reward","Shine","Covenant","Worth","Sun","Overflow"],
-             clarity:"Gold is a direct signal of incoming material or spiritual reward for work you've already done. Do not downplay your worth in any negotiation or opportunity approaching you this week. The harvest is real and it belongs to you."},
-  death:    {hook:["Ending","Release","Crossroads","Rebirth","Transition","Final","Door"],
-             clarity:"This dream is not about dying — it is about an identity or chapter that must be allowed to end. The grief you feel at letting go is valid, but holding on now will cost you the life waiting on the other side. What must die is clear to you."},
-  flying:   {hook:["Elevation","Freedom","Weightless","Above","Dare","Wind","Transcend"],
-             clarity:"You are ready to rise and your subconscious knows it even if your waking mind is full of doubt. The one action you've been postponing out of fear is the exact thing that will take you above the noise. The time is now, not when conditions are perfect."},
-  fall:     {hook:["Surrender","Let Go","Control","Void","Trust","Drop","Land"],
-             clarity:"Falling is your subconscious telling you that what you are gripping so tightly must be released. The fear of the fall is greater than the fall itself. When you stop fighting the descent, you will discover the ground is closer and softer than you feared."},
-  moon:     {hook:["Ascension","Silver","Cycles","Mystery","Instinct","Longing","Above"],
-             clarity:"The moon speaks of a longing for something elevated and pure — a life not yet fully lived. You are in the middle of a significant cycle ending. Within two weeks, clarity about something that has felt uncertain will arrive suddenly, like moonlight breaking cloud."},
-  ocean:    {hook:["Vastness","Unconscious","Depth","Waves","Abyss","Surrender","Current"],
-             clarity:"The ocean represents the full weight of your emotional and spiritual life — all of it, not just the parts you show the world. Stop standing at the shoreline. Go deeper into yourself this week. What you find there will become your greatest power."},
-  rain:     {hook:["Cleanse","Grief","Renewal","Heaven","Tears","Fertility","Wash"],
-             clarity:"Rain in your dream is permission to feel what you've been holding back. The sadness or longing you've been managing is asking to move through you, not stay in you. Let it fall — on the other side of this emotional rain is a clarity that has been waiting for months."},
-  storm:    {hook:["Chaos","Test","Temporary","Thunder","Pressure","Pass","After"],
-             clarity:"The storm has an expiry date. You are further through it than you feel — closer to the clearing than to the start. Do not make permanent decisions or cut permanent ties while still inside the turbulence. Wait for the sky to open."},
-  chase:    {hook:["Avoidance","Fear","Pursue","Run","Breathless","Face","Exhaust"],
-             clarity:"The thing chasing you is the one thing in your waking life you most need to stop running from. The moment you stop and turn to face it directly, you will discover it is far smaller than the fear it has been generating. Face it once and it loses all its power."},
-  dog:      {hook:["Loyalty","Betrayal","Instinct","Pack","Trust","Protect","Nose"],
-             clarity:"Your dream dog reveals the state of your closest loyalties. If the dog was threatening, someone whose loyalty you assumed has shifted — your instincts about this person are correct. Trust your nose over the noise of politeness."},
-  house:    {hook:["Self","Structure","Foundation","Room","Walls","Psyche","Home"],
-             clarity:"The house in your dream is you — each room a different part of your inner world. One part of your life's structure needs deliberate attention before you build anything new on top of it. Start with the room that unsettled you most. That is the one."},
-  road:     {hook:["Direction","Choice","Fork","Destination","Journey","Ahead","Miles"],
-             clarity:"A significant decision point is closer than you think. Your hesitation is not wisdom — it is old fear wearing the costume of caution. The path you've been questioning is valid. Move forward this week before the moment passes."},
-  mirror:   {hook:["Truth","Reflection","Identity","Illusion","Face","Honest","Alter"],
-             clarity:"The mirror is asking you to see yourself clearly — not the version you perform for others. There is a gap between who you truly are and how you've been presenting yourself. Closing that gap with one honest action this week will permanently change how the world treats you."},
-  bridge:   {hook:["Crossing","Risk","Transition","Threshold","Courage","Span","Between"],
-             clarity:"You are standing at the threshold between who you have been and who you are becoming. The bridge is already built — the only thing left is the crossing. What feels like risk is actually the walk you were always meant to take. The bridge is stable."},
-  clock:    {hook:["Urgency","Window","Expire","Now","Deadline","Tick","Closing"],
-             clarity:"A specific window of opportunity in your waking life is closing faster than you realize. Identify what you've been postponing and treat the next 48 hours as the most important movement you'll make this month. The window is real and it is narrow."},
-  star:     {hook:["Destiny","Guide","Wish","Lit","Sign","Navigate","Above"],
-             clarity:"Stars confirm that your path is being guided from a source higher than your own understanding. The uncertainty you feel is not evidence that you are lost — it is the space between where you are and where you are being taken. Keep moving toward the light you feel."},
-  mountain: {hook:["Challenge","Summit","Climb","Altitude","Steep","Endure","Vision"],
-             clarity:"The mountain is not the obstacle — it is the elevation itself. You cannot go around what you are meant to climb through. The difficulty of your current season is exactly proportional to the view waiting at the top. You are closer to the summit than you feel."},
-  ring:     {hook:["Promise","Covenant","Cycle","Commitment","Forever","Bind","Circle"],
-             clarity:"A commitment — to a person, a path, or yourself — is at the center of what this dream is revealing. Living in ambiguity about a promise is the source of your current tension. Make a clear decision this week: honor it fully or release it cleanly. Both are valid."},
-  door:     {hook:["Opportunity","Threshold","Open","Knock","Beyond","Enter","Choice"],
-             clarity:"The door in your dream is a real opportunity available to you right now in waking life. You have been standing in front of it longer than necessary. The only question is: will you knock? The door is open. The timing is now."},
-  blood:    {hook:["Life","Sacrifice","Family","Bond","Wound","Sacred","Deep"],
-             clarity:"Blood connects to something you have given deeply — energy, time, love, or sacrifice poured into a person or purpose. That sacrifice has not been wasted. A return is moving toward you and will arrive in a form you did not expect but will recognize immediately."},
-  crown:    {hook:["Authority","Recognition","Responsibility","Lead","Rise","Worthy","Weight"],
-             clarity:"Leadership is being placed on you whether you feel ready or not. The question is not whether you are qualified — it is whether you will accept the responsibility. Step into the role that has been forming around you. The people who need your leadership have been waiting."},
-  angel:    {hook:["Protected","Message","Divine","Unseen","Grace","Sent","Arrival"],
-             clarity:"You are not as alone in your current situation as it feels. Protection and intervention are active on your behalf right now in ways you cannot yet see. Act from a place of confidence this week — the backup you didn't know you had has already arrived."},
-  shadow:   {hook:["Hidden","Follow","Dark","Self","Fear","Suppress","Integrate"],
-             clarity:"The shadow following you in the dream is not a threat from outside — it is the part of yourself you have not yet accepted. What you run from only grows larger behind you. Turn toward it this week with curiosity rather than fear and you will find it dissolves into strength."},
-  horse:    {hook:["Speed","Power","Direction","Wild","Ride","Momentum","Grace"],
-             clarity:"Your power and energy are fully available right now — the only missing element is a committed direction. Stop dividing your momentum between multiple targets. Choose one this week and ride with full force. The distance you cover will surprise you."},
-  wolf:     {hook:["Instinct","Pack","Howl","Lone","Territory","Fierce","Loyalty"],
-             clarity:"Your instincts about a group or team dynamic are accurate — someone is out of alignment with the true direction. Trust your nose over the room's consensus. The lone position you've been hesitant to take is the correct one."},
-  grave:    {hook:["End","Bury","Past","Honor","Release","Grief","Soil"],
-             clarity:"You are being asked to conduct a burial — not of a person, but of something in your life that has already died but has not yet been formally released. Until you bury it with intention, it will continue occupying space that belongs to something new."},
-  river:    {hook:["Flow","Surrender","Current","Direction","Source","Move","Mouth"],
-             clarity:"Stop fighting the current of your life. The direction things are naturally moving is aligned with your growth — your resistance is the only real obstacle. Surrender to the flow this week and you will travel further than you have in months."},
-  desert:   {hook:["Alone","Strip","Silence","Test","Bare","Endure","Hidden"],
-             clarity:"The desert season you are in is not punishment — it is preparation. In the stripping away of noise and distraction, you are finding out who you actually are beneath all of it. Stay in the silence a little longer. The oasis is real and it is close."},
-  sword:    {hook:["Truth","Cut","Justice","Precise","Courage","Edge","Speak"],
-             clarity:"Something in your life needs to be addressed with precision and courage. The sword is not asking you to attack — it is asking you to cut through illusion cleanly, with words spoken directly. The right conversation this week will end a prolonged and unnecessary uncertainty."},
-  flower:   {hook:["Bloom","Beauty","Tender","Patience","Color","Unfold","Gift"],
-             clarity:"Something you have quietly tended for a long time is within days of blooming visibly. Do not abandon it in the final stretch out of impatience or doubt. The gift coming is a direct result of the care you gave when no one was watching."},
-  spider:   {hook:["Weave","Trap","Create","Patient","Web","Design","Cunning"],
-             clarity:"A web is being woven — either by you, or around you. Your patient effort is about to yield results, but examine simultaneously whether someone in your environment is constructing a situation designed to limit you. Both may currently be true."},
-  egg:      {hook:["Potential","Incubate","Fragile","New","Hidden","Emerge","Time"],
-             clarity:"Something extraordinary is incubating in your life — alive, real, and not yet ready to be seen. Resist the urge to crack it open with premature disclosure or premature action. Protect it from critics for 21 more days before revealing it to anyone."},
-  tree:     {hook:["Roots","Growth","Ancestry","Seasons","Deep","Branches","Endure"],
-             clarity:"Your roots are being tested so your branches can grow to heights previously impossible. The instability you feel is not failure — it is the deepening of your foundation. Hold through the end of this season. What is being rooted now will hold extraordinary weight."},
-  baby:     {hook:["New","Fragile","Potential","Protect","Seed","Beginning","Nurture"],
-             clarity:"Something new and deeply valuable is in its earliest, most vulnerable stage in your life right now. Do not expose it to harsh criticism or loud environments yet. Protect it in silence until it has found its own footing. Then show the world."},
-  prison:   {hook:["Trapped","Belief","Bars","Limit","Cage","Freedom","Key"],
-             clarity:"The prison in your dream is built from beliefs, not circumstances. The bars are made of inherited limitations and fears dressed as rules. Identify the one belief acting as your cell wall — questioning it once will reveal that the door was never locked from the outside."},
-  mother:   {hook:["Nurture","Origin","Wound","Love","Root","Unconditional","Home"],
-             clarity:"Your dream is touching the deepest layer of how you were taught to value yourself. The love you give so freely to others deserves to be redirected inward right now. The standard you hold yourself to is harsher than any truly loving parent would ever impose."},
-  father:   {hook:["Authority","Standard","Discipline","Measure","Legacy","Prove","Approval"],
-             clarity:"You are living by a measure of success or worth that was given to you rather than chosen by you. Your dream is inviting you to examine this inherited standard. Reclaiming your own definition of enough — separate from that measure — is the act of real freedom waiting for you."},
-  invisible:{hook:["Unseen","Quiet","Prepare","Hidden","Build","Private","Emerge"],
-             clarity:"The season of being unseen is not rejection — it is protection. What is being formed in you during this quiet period cannot be rushed or disrupted by external attention. When you emerge from this season, the work will be complete and it will speak loudly for itself."},
-  war:      {hook:["Conflict","Battle","Sides","Exhaust","Cost","Withdraw","Win"],
-             clarity:"Not every battle in your life right now is yours to fight. Your dream is showing you a conflict that is consuming energy your actual purpose urgently needs. Strategically withdraw from the one costing you the most and redirect that force toward what matters."},
-  mirror2:  {hook:["Distorted","Unclear","Multiple","Truth","Fractured","Face","Reality"],
-             clarity:"Your perception of a situation in your waking life is being distorted by emotion or other people's narratives. The dream is asking you to look again with fresh eyes, without the framing you've been given. What you actually see when the mirror clears will surprise you."},
-  window:   {hook:["Perspective","View","Barrier","Light","Watch","Frame","Beyond"],
-             clarity:"A window in a dream is the gap between where you are and where you could be — you can see it but haven't crossed it. The barrier is thinner than it appears. One deliberate action this week is the difference between watching your life and actually living it."},
-  running:  {hook:["Momentum","Escape","Effort","Breathless","Direction","Speed","Behind"],
-             clarity:"The running in your dream reveals whether you are running toward something or away from something. If it felt heavy, you are carrying something that slows you. If it felt free, momentum is building in your life and should not be stopped by hesitation right now."},
-  light:    {hook:["Clarity","Truth","Divine","Hope","Direction","Warmth","Reveal"],
-             clarity:"Light in a dream is one of the clearest signs. Something that has been hidden — a truth, a person's nature, an opportunity — is about to be fully illuminated in your waking life. Position yourself to see clearly when it arrives. Do not look away from what the light reveals."},
-  darkness: {hook:["Unknown","Fear","Void","Before","Create","Await","Blank"],
-             clarity:"Darkness in a dream is not always a threat — it is often the void before creation. You are standing at the beginning of something new and the dark feels like danger because what is coming has no form yet. What you bring into this space will be entirely your own."},
-  key:      {hook:["Access","Solution","Power","Unlock","Authority","Possession","Open"],
-             clarity:"The answer to a problem you've been struggling with is already in your possession — you've been taught everything you need. Look inward before looking outward. The key in your dream is showing you that the lock was never the problem. Your hesitation to use what you have was."},
+  water:{hook:['stream','river','ocean','flow','depths','currents'],
+    clarity:'Water in dreams flows where rigid structures cannot bend. It represents emotional currents, adaptability, and the unconscious mind\'s fluid nature. Drowning suggests feeling overwhelmed; swimming suggests navigating emotions with grace. Still water is reflection; turbulent water is change.'},
+  flying:{hook:['sky','soar','freedom','altitude','weightless'],
+    clarity:'Flying is liberation. You are transcending limitations the waking self accepts as fixed. The altitude reveals how far you\'ve risen: low flight suggests gradual growth, high flight suggests exponential freedom. Falling mid-flight means resistance to this ascension.'},
+  death:{hook:['ending','transformation','passage','finality','farewell'],
+    clarity:'Death in dreams is not literal—it is transformation. Something in your waking life is ending: a relationship, belief, or version of yourself. This dream is not a warning but a messenger announcing rebirth. What dies makes space for what\'s new.'},
+  fire:{hook:['flame','burn','heat','destruction','passion','purification'],
+    clarity:'Fire is passion and destruction intertwined. Controlled fire purifies; raging fire consumes. A house burning may signal letting go; fire in your hands suggests creative power. The heat reveals intensity in some area of your life demanding resolution.'},
+  snake:{hook:['serpent','venom','coil','scales','danger','wisdom'],
+    clarity:'Snakes carry dual meaning: they are both healer and threat. In ancient symbolism, the serpent represents transformation and shedding old skin. A bite suggests you\'ve encountered wisdom through pain. A docile snake means you\'re integrating shadow knowledge.'},
+  gold:{hook:['treasure','wealth','treasure','precious','shining','riches'],
+    clarity:'Gold is the incorruptible. Unlike silver (intuition) or iron (will), gold doesn\'t tarnish. Finding gold in dreams means you\'ve discovered something of lasting value within yourself—integrity, authentic worth, or a principle that won\'t compromise.'},
+  falling:{hook:['dropping','descent','plummeting','loss of control','ground approaching'],
+    clarity:'Falling is loss of control revealing where you\'ve placed false faith in external support. Soft landings mean your unconscious mind is catching you; hard impacts suggest ignoring warning signs. This dream asks: what are you afraid to lose your grip on?'},
+  money:{hook:['cash','coins','payment','transaction','wealth','currency'],
+    clarity:'Money in dreams is never about literal wealth—it\'s about value exchange. Spending freely means investing in growth; losing money means devaluing yourself. Finding coins suggests discovering overlooked worth. The dream asks what you\'re trading away or receiving.'},
+  forest:{hook:['trees','woods','wilderness','lost','darkness','nature','ancient'],
+    clarity:'Forests are the maze of the unconscious. Being lost in one means your conscious mind has strayed from intuitive knowing. Dense forests suggest confusion; clear forests suggest finding your path. This dream invites you to trust your inner compass.'},
+  lion:{hook:['king','roar','strength','mane','majesty','predator','courage'],
+    clarity:'The lion is regal power and primal authority. A lion attacking suggests internal power demanding recognition. A docile lion means you\'ve tamed your own strength. This dream is about stepping into your own sovereignty and claiming the throne of your life.'},
+  moon:{hook:['lunar','moonlight','night','crescent','celestial','orbit'],
+    clarity:'The moon rules dreams themselves—cycles, intuition, the hidden face of consciousness. A full moon amplifies inner sight; a new moon signals new beginnings in the invisible realm. The moon always reflects light; this dream asks what truth you\'re illuminating.'},
+  storm:{hook:['thunder','lightning','chaos','tempest','turbulence','wind'],
+    clarity:'Storms are emotional upheaval breaking through numbness. Thunder announces arrival of necessary change; lightning is sudden clarity. Running from a storm means avoiding necessary turbulence; standing in it means integrating your full emotional range. This dream purges stagnant energy.'},
+  chase:{hook:['pursued','running','escape','fear','pursuit','hunted'],
+    clarity:'Being chased reveals what you\'re avoiding within yourself. Who or what chases you holds a mirror to a disowned part of your nature. Stopping and turning to face the pursuer transforms the dream. This dream asks: what part of yourself are you running from?'},
+  dog:{hook:['loyal','bark','bite','pack','companion','beast'],
+    clarity:'Dogs represent loyalty, protection, and the instinctual self. A friendly dog is your protective instinct aligned with your conscious mind; an attacking dog means your defenses have turned aggressive. This dream shows your relationship with your own fierce devotion.'},
+  house:{hook:['home','room','building','shelter','walls','structure'],
+    clarity:'The house is your psyche. Each room is a different aspect of self. Exploring new rooms means discovering unknown capacities. A crumbling house suggests integration of shadow; a mansion suggests vast untapped potential. This dream is always about your internal structure.'},
+  road:{hook:['path','direction','journey','travel','crossroads','destination'],
+    clarity:'Roads are the trajectory of your life. A clear road ahead shows purpose; a forked road reveals choice. Dead ends demand reassessment. This dream asks: are you following someone else\'s map, or writing your own destination into being?'},
+  clock:{hook:['time','deadline','urgency','hours','ticking','running out'],
+    clarity:'Clocks measure what cannot be slowed. This dream surfaces anxiety about finite resources—time, youth, opportunity. Stopping a clock means reclaiming authority over your own pace. This dream asks what you\'re rushing toward and what you\'re rushing away from.'},
+  star:{hook:['constellation','light','guidance','wish','night','cosmos'],
+    clarity:'Stars are distant lights guiding navigation. Reaching for stars means aspiring beyond current limits. Stars falling mean ideals shifting. This dream connects you to your celestial nature and the direction your soul truly wants to travel.'},
+  mountain:{hook:['climb','summit','peak','ascent','height','obstacle'],
+    clarity:'Mountains are challenges that forge character. Climbing reveals effort required for growth; reaching the summit is earned perspective. A mountain blocking your path asks: are you ready to ascend, or will you circumvent this initiation? Growth demands the climb.'},
+  ring:{hook:['circle','marriage','bond','eternity','completion','cycle'],
+    clarity:'Rings are cycles with no end. They symbolize commitment, wholeness, or an unbroken bond. A broken ring means a cycle is ending; a golden ring means lasting unity. This dream reveals where your energy is circling and what closure or commitment your soul seeks.'},
+  door:{hook:['entrance','exit','threshold','opening','locked','key'],
+    clarity:'Doors are passages between states of being. Closed doors reveal barriers; open doors reveal invitations. A locked door you cannot open means you haven\'t yet earned the key. This dream asks what threshold you\'re standing at and whether you\'re ready to cross.'},
+  blood:{hook:['wound','injury','life force','sacrifice','vital','red'],
+    clarity:'Blood is life force spilled. Bleeding suggests losing vitality to something; blood on your hands suggests bearing responsibility. This dream surfaces what\'s been hurt or what sacrifice has been made. Healing the wound is integration of the cost.'},
+  crown:{hook:['king','queen','royalty','power','authority','throne'],
+    clarity:'Crowns are authority you\'ve earned or inherited. Wearing a crown means stepping into leadership; losing a crown means abdication of power. This dream asks: what throne is yours to occupy? What authority have you been denying yourself?'},
+  angel:{hook:['divine','wings','light','messenger','heaven','grace'],
+    clarity:'Angels are aspects of self aligned with the highest good. An angel appearing means guidance from your deepest wisdom. An angel leaving may signal disconnection from higher purpose. This dream reconnects you to the sacred dimension of your own nature.'},
+  shadow:{hook:['dark','figure','darkness','unseen','lurking','silhouette'],
+    clarity:'Shadows are disowned aspects of self. A shadow following you means rejected parts demanding integration. Turning to face the shadow transforms it. This dream asks: what have you refused to see in yourself that\'s trying to catch your attention?'},
+  horse:{hook:['ride','gallop','strength','steed','freedom','power'],
+    clarity:'Horses are raw power harnessed or wild. Riding means directing your own power; being thrown means power rebelling against your control. A galloping horse is freedom; a tethered horse is restriction. This dream shows your relationship with your own vital force.'},
+  wolf:{hook:['pack','hunt','wild','fierce','instinct','survival'],
+    clarity:'Wolves are instinctual intelligence in packs. A lone wolf suggests independence; wolves hunting suggest a group aligned in purpose. Befriending a wolf means integrating your wild intelligence. This dream awakens the predator within—strategy, discernment, and fierce presence.'},
+  grave:{hook:['burial','death','resting','tomb','ending','beneath'],
+    clarity:'Graves are where you\'ve buried what no longer serves. Digging up a grave means exhuming what you\'ve tried to forget. Resting in a grave means surrendering. This dream invites you to release what\'s dead and let it return to earth.'},
+  river:{hook:['flowing','current','movement','journey','direction'],
+    clarity:'Rivers flow toward the sea—toward wholeness and return. Swimming upstream means resisting natural flow; going with the current means trusting destiny. A river blocking your path means yielding to what\'s larger than yourself.'},
+  desert:{hook:['sand','dry','vast','alone','empty','heat'],
+    clarity:'Deserts are barren initiations. Crossing a desert means enduring necessary emptiness to find what\'s essential. This is purification. An oasis in the desert means mercy appears in your darkest moment. This dream tests what you value when everything else is stripped away.'},
+  spider:{hook:['web','weaving','trap','caught','intricate'],
+    clarity:'Spiders weave intricate patterns. A web catching you means you\'re caught in someone else\'s design; weaving your own web means creating your reality. A spider bite is transformation through poison. This dream shows the invisible threads you\'re weaving.'},
+  sword:{hook:['blade','cut','sharp','divide','battle','weapon'],
+    clarity:'Swords are discernment and division. A sharp sword cuts cleanly; a dull sword wounds. Wielding a sword means cutting away illusion; being struck by one means encountering harsh truth. This dream shows where clarity or conflict demands a clean cut.'},
+  flower:{hook:['bloom','petal','garden','beauty','growth','color'],
+    clarity:'Flowers are beauty unfolding. Blooming means fulfilling potential; wilting means vitality fading. A garden of flowers means tending multiple gifts. A single flower means focusing on one perfect expression. This dream celebrates what\'s becoming beautiful in you.'},
+  bridge:{hook:['crossing','gap','connection','passage','span'],
+    clarity:'Bridges span what seems separate. Crossing a bridge means integration of opposites. A bridge collapsing means loss of connection. Building a bridge means creating unity. This dream shows where you\'re connecting what appeared divided.'},
+  mirror:{hook:['reflection','seeing','face','truth','clarity'],
+    clarity:'Mirrors show truth you cannot deny. A distorted reflection means your self-image is false. Avoiding a mirror means avoiding self-knowledge. This dream asks you to truly see yourself as you are, not as you believe yourself to be.'},
+  egg:{hook:['potential','fragile','birth','beginning','incubation'],
+    clarity:'Eggs hold unmanifested potential. Hatching means revealing what was hidden. A cracked egg suggests fragility of what\'s emerging. This dream announces a birth—of a new phase, gift, or version of yourself. Handle with care.'},
+  tree:{hook:['roots','branches','growth','stability','ancient'],
+    clarity:'Trees root you while reaching skyward. Deep roots mean stability; strong branches mean expression. A tree falling means loss of support; a tree growing means expansion. This dream connects you to your own strength and reach.'},
+  baby:{hook:['infant','new','vulnerable','innocent','care'],
+    clarity:'Babies are new potential requiring protection. Holding a baby means nurturing growth; a crying baby means neglected potential. Pregnancy means something\'s developing. This dream asks what new life you\'re midwifing into existence.'},
+  prison:{hook:['trapped','locked','confined','bars','escape','cage'],
+    clarity:'Prisons are self-imposed or externally enforced limitation. Being imprisoned suggests a belief that constrains you. Escaping prison means reclaiming freedom. This dream asks: who\'s the jailer and who\'s the prisoner? Both are you.'},
+  mother:{hook:['nurture','origin','protection','womb','maternal'],
+    clarity:'Mothers are the source—nourishment and origin. A nurturing mother means support; an absent mother means unmet need. Becoming a mother means creating your own source. This dream reveals your relationship to being received and giving.'},
+  father:{hook:['authority','law','protection','strength','paternal'],
+    clarity:'Fathers are authority and law. A strong father means grounding; an absent father means lost direction. Becoming a father means establishing your own authority. This dream shows your relationship with power and principled action.'},
+  invisible:{hook:['unseen','ignored','transparent','vanished','forgotten'],
+    clarity:'Invisibility is the fear of not mattering. Being invisible suggests your voice isn\'t being heard or you\'ve made yourself small. This dream asks: are you hiding, or is the world not seeing? Both demand action.'},
+  war:{hook:['battle','conflict','army','weapons','explosion'],
+    clarity:'Wars are internal conflicts externalized. Fighting a war means you\'re at battle with yourself. Winning means integration; losing means being overtaken by opposing forces. This dream surfaces the battlefield within where peace must be negotiated.'},
+  window:{hook:['view','see','looking','perspective','frame'],
+    clarity:'Windows are perspectives. Looking out means seeing your world; looking in means seeing yourself. A closed window means limited sight; a broken window means shattered perspective. This dream shows what you\'re seeing and what you\'re avoiding.'},
+  running:{hook:['sprint','movement','escape','speed','pursuit'],
+    clarity:'Running is momentum—forward or away. Running toward something means pursuit of desire; running away means avoidance. Exhausted running means life has drained you. This dream asks: what\'s your momentum serving, and does it align with your soul?'},
+  light:{hook:['bright','glow','illuminated','clarity','shine'],
+    clarity:'Light is consciousness and truth. Moving toward light means seeking knowledge; being in light means enlightenment; losing light means confusion. This dream surfaces what\'s been illuminated or what needs illumination in your understanding.'},
+  darkness:{hook:['dark','night','unknown','void','black'],
+    clarity:'Darkness is the womb of unknowing. Fear in darkness reveals terror of the unknown; peace in darkness reveals trust. This dream asks whether you\'re ready to surrender to what you cannot see and find the light within the dark.'},
+  key:{hook:['unlock','access','secret','solution','open'],
+    clarity:'Keys unlock locked doors. Finding a key means discovering a solution you\'ve been seeking. Losing a key means losing access. This dream signals that what you need to open is within reach—you need only find or craft the key.'},
+  ocean:{hook:['vast','deep','infinite','waves','abyss','sailing'],
+    clarity:'Oceans are the infinite unconscious. Small waves mean surface emotions; tsunamis mean overwhelming force. Sailing means navigating vast depths with purpose. Drowning means losing yourself in vastness. This dream connects you to the infinite dimension of your nature.'},
+  rain:{hook:['falling','wet','shower','drizzle','downpour'],
+    clarity:'Rain is blessing and flood intertwined. Gentle rain nourishes; storms drench. Standing in rain means receiving; running from rain means rejecting nourishment. This dream asks what\'s falling from the sky that you need to allow to land.'}
 };
 
-// ─── NLP ENGINE — Smart multi-word pattern matching ──────────────────────────
-// Covers full sentence inputs, slang, indirect descriptions, and emotional language.
-// Scores by keyword weight — multi-word phrases score higher than single words.
+// ─── REAL-TIME AI STREAMING ───────────────────────────────────────────────
+async function generateClarityWithAI(symbol, dreamText) {
+  const box = document.getElementById(`box_${symbol}`);
+  box.innerHTML = '<div class="ai-stream streaming" id="streamContent"></div>';
+  
+  const streamContent = document.getElementById('streamContent');
+  let fullText = '';
+  
+  try {
+    const response = await fetch('https://api.vercel.ai/text', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [{
+          role: 'user',
+          content: `You are a dream interpreter. The user dreamed about "${symbol}". Their dream description: "${dreamText}". 
+          
+          Give a profound, poetic, 2-3 sentence interpretation. Connect the symbol to their specific dream. Be mystical but insightful. Start directly with interpretation, no preamble.`
+        }],
+        stream: true
+      })
+    });
 
-const KW = {
-  water:    ["water","swim","swimming","drown","drowning","flood","flooded","lake","river","pool","underwater","wet","rain","ocean","sea","waves","tide","creek","stream","submerged","sinking","sink","splash","fluid","liquid","puddle","soaked","soaking","bath","bathing","shower"],
-  fire:     ["fire","flame","flames","burning","burn","burned","burnt","blaze","blazing","smoke","inferno","ember","ash","ashes","hot","heat","scorched","wildfire","ignite","explosion","explode","lit up","on fire","engulfed"],
-  lion:     ["lion","lions","lioness","roar","roaring","mane","pride","big cat","beast","fierce animal","king of jungle"],
-  snake:    ["snake","snakes","serpent","viper","cobra","python","boa","reptile","slither","slithering","bite","biting","venomous","ssss","coiled","hissing","hiss"],
-  gold:     ["gold","golden","treasure","jewel","jewelry","wealth","coin","coins","riches","glitter","gleam","shine","shining","precious","valuable","diamond","gems","fortune","ring","necklace","bracelet"],
-  death:    ["death","die","dead","dying","funeral","coffin","kill","killed","ghost","corpse","body","grave","graveyard","cemetery","tomb","burial","passed away","murder","murdered","zombie","spirit","afterlife","heaven","hell","deceased"],
-  flying:   ["fly","flying","float","floating","soar","soaring","hover","hovering","wings","levitate","levitating","glide","gliding","above","airborne","up in the air","in the sky","flight","flew"],
-  fall:     ["fall","falling","fell","drop","dropping","dropped","plunge","plunging","tumble","tumbling","slip","slipped","tripped","cliff","edge","gravity","going down","losing balance","falling off"],
-  moon:     ["moon","lunar","moonlight","moonwalk","crescent","moonrise","full moon","night sky","orbit","space","planet","celestial","stars and moon"],
-  storm:    ["storm","stormy","hurricane","tornado","cyclone","thunder","thunderstorm","lightning","dark clouds","wind","gale","hail","downpour","flooding","flooded","disaster","chaotic weather","heavy rain"],
-  chase:    ["chase","chased","chasing","being chased","run","running","ran","escape","escaping","flee","fleeing","pursue","pursuing","catch me","catching me","hunt","hunting","followed","following me","behind me","something behind","couldn't escape","running away","ran away","running from"],
-  dog:      ["dog","dogs","puppy","puppies","bark","barking","bite by dog","dog attack","hound","canine","pet dog","doberman","rottweiler","wolf dog","growling dog"],
-  house:    ["house","home","room","building","apartment","inside","inside a building","walls","basement","attic","bedroom","hallway","stairs","corridor","door","doors","old house","my house","someone's house","empty house","strange house"],
-  road:     ["road","path","highway","street","direction","crossroads","journey","travel","walking along","driving","path forward","which way","lost on road","fork in road","long road","route"],
-  clock:    ["clock","time","watch","late","deadline","hours","minutes","alarm","running out","running out of time","time is running","timer","countdown","ticking","time pressure","too late","missing","missed"],
-  star:     ["star","stars","night sky","constellation","galaxy","universe","shooting star","cosmos","space","sky full of stars","staring at stars","starlight"],
-  mountain: ["mountain","hill","climb","climbing","climbed","summit","peak","top","steep","high ground","uphill","going up a mountain","mount","elevation","rocky"],
-  ring:     ["ring","circle","band","loop","marry","marriage","wedding","engage","engaged","proposal","propose","jewelry ring","put on a ring","took off ring"],
-  door:     ["door","gate","entrance","exit","open door","closed door","knock","knocking","threshold","doorway","could not open","locked door","open a door","walking through a door","behind a door"],
-  blood:    ["blood","bleed","bleeding","wound","wounded","cut","cut myself","red","injury","injured","stabbed","hit","accident","hurt","pain","red liquid"],
-  crown:    ["crown","king","queen","throne","royalty","rule","reign","leader","leadership","bow down","coronation","crowned","power"],
-  angel:    ["angel","angels","divine","god","heaven","heavenly","spirit","holy","wings of light","light being","glowing figure","white light","being of light","messenger","prayer","praying","religious"],
-  shadow:   ["shadow","dark figure","darkness","follow me","lurking","behind me","my shadow","silhouette","dark presence","something in the dark","something following","black figure","dark shape"],
-  horse:    ["horse","horses","ride","riding","gallop","galloping","stallion","mare","equine","horseback","steed"],
-  wolf:     ["wolf","wolves","pack","howl","howling","wolf attack","werewolf","growl","forest creature","surrounded by wolves"],
-  grave:    ["grave","graveyard","cemetery","burial","tomb","coffin","dig","digging","tombstone","rip","rest in peace","headstone","someone buried"],
-  river:    ["river","stream","current","flowing water","canal","creek","water moving","rushing water","carried by water","swept away","drift"],
-  desert:   ["desert","sand","dunes","alone in sand","dry","heat","thirst","vast","empty land","wasteland","stranded","lost in desert","no water"],
-  spider:   ["spider","spiders","web","cobweb","spider web","tarantula","arachnid","trapped in web","bitten by spider","crawling"],
-  sword:    ["sword","knife","blade","cut","weapon","duel","stab","stabbed","sharp","sharp object","knife attack","armed","blade"],
-  flower:   ["flower","flowers","rose","roses","bloom","blooming","petal","petals","garden","blossom","blossoms","beauty","tulip","orchid","bouquet","planted","grew"],
-  bridge:   ["bridge","crossing","overpass","span","gap","walk across","stepped onto","suspended bridge","rope bridge","over water","connecting"],
-  mirror:   ["mirror","reflection","looking at myself","see myself","saw myself","my reflection","glass","looking glass","distorted","face in mirror"],
-  egg:      ["egg","eggs","hatch","hatching","nest","fragile","oval","incubate","something inside","bird egg","cracked"],
-  tree:     ["tree","trees","forest","jungle","branch","branches","roots","leaves","wood","trunk","bark","climb a tree","fell a tree","bark","grew"],
-  baby:     ["baby","babies","infant","child","newborn","pregnant","pregnancy","birth","cradle","hold a baby","gave birth","small child","toddler","feeding a baby"],
-  prison:   ["prison","jail","trapped","cage","locked","bars","cell","handcuffs","captive","locked in","can't get out","locked room","stuck","confined","no exit"],
-  mother:   ["mother","mom","mum","mama","my mother","maternal","my mom","she was there","woman who raised me","parent","mom appeared"],
-  father:   ["father","dad","papa","my father","paternal","authority figure","my dad","old man","he was there","man who raised me","fatherly"],
-  invisible:["invisible","unseen","nobody","ignored","transparent","disappear","disappeared","nobody could see","no one noticed","faded","vanished","couldn't be seen"],
-  war:      ["war","battle","fight","army","soldier","soldiers","weapon","weapons","conflict","attack","attacked","battlefield","guns","shooting","explosion","bombs","military"],
-  window:   ["window","look through","view","see through","glass panel","looked outside","staring through","watching from inside","window frame"],
-  running:  ["running","ran","sprint","sprinting","jogging","moving fast","couldn't stop running","legs moving","run fast","chased while running"],
-  light:    ["light","bright light","glow","glowing","illuminated","shining","ray of light","white light","blinding light","light appeared","lit up","luminous"],
-  darkness: ["dark","darkness","pitch black","couldn't see","no light","all black","surrounded by dark","black void","nothing but darkness","dark room","blackout"],
-  key:      ["key","keys","unlock","unlocked","open a lock","holding a key","found a key","key hole","secret","locked box","access"],
-  ocean:    ["ocean","sea","vast water","deep sea","endless water","bottomless","abyss","waves","tide","shore","beach","coast","horizon water","sailed","boat","ship"],
-  rain:     ["rain","raining","drizzle","drizzling","downpour","got wet","wet from rain","standing in rain","rain falling","rainfall"],
-};
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
 
-function extractSymbol(text) {
-  const t = text.toLowerCase().replace(/[^a-z\s]/g, " ");
-  let best = null, bestScore = 0;
-  for (const [sym, kws] of Object.entries(KW)) {
-    let score = 0;
-    for (const kw of kws) {
-      if (t.includes(kw)) {
-        score += kw.split(" ").length; // multi-word phrases score higher
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+          try {
+            const json = JSON.parse(line.slice(6));
+            const text = json.choices?.[0]?.delta?.content || '';
+            if (text) {
+              fullText += text;
+              streamContent.textContent = fullText;
+              streamContent.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          } catch (e) {}
+        }
       }
     }
-    if (score > bestScore) { bestScore = score; best = sym; }
+
+    streamContent.classList.remove('streaming');
+  } catch (e) {
+    streamContent.textContent = VAULT[symbol]?.clarity || 'The oracle reads your silence.';
+    streamContent.classList.remove('streaming');
+    console.error('[Nrowa] AI streaming failed, using vault:', e.message);
   }
-  return bestScore > 0 ? best : null;
 }
 
-// For when multiple symbols are present — show the dominant one
+// ─── SYMBOL EXTRACTION ────────────────────────────────────────────────────
+const KW = {};
+for (const [sym, data] of Object.entries(VAULT)) {
+  KW[sym] = data.hook;
+}
+
 function extractAllSymbols(text) {
-  const t = text.toLowerCase().replace(/[^a-z\s]/g, " ");
+  const t = text.toLowerCase().replace(/[^a-z\s]/g, ' ');
   const found = [];
   for (const [sym, kws] of Object.entries(KW)) {
     let score = 0;
     for (const kw of kws) {
-      if (t.includes(kw)) score += kw.split(" ").length;
+      if (t.includes(kw)) score += kw.split(' ').length;
     }
     if (score > 0) found.push({ sym, score });
   }
   return found.sort((a, b) => b.score - a.score);
 }
 
-// ─── SEARCH HANDLER ───────────────────────────────────────────────────────────
+// ─── SEARCH HANDLER ───────────────────────────────────────────────────────
 function handleSearch() {
-  const raw  = document.getElementById("dreamInput").value.trim();
-  const area = document.getElementById("resultArea");
+  const raw = document.getElementById('dreamInput').value.trim();
+  const area = document.getElementById('resultArea');
   if (!raw) return;
 
   const all = extractAllSymbols(raw);
-
+  
   if (all.length === 0) {
-    // Fallback: break the sentence into words and find closest match
-    const words = raw.toLowerCase().split(/\s+/);
-    let fallbackKey = null;
-    outer: for (const word of words) {
-      for (const key of Object.keys(VAULT)) {
-        if (key.includes(word) || word.includes(key)) {
-          fallbackKey = key;
-          break outer;
-        }
-      }
-    }
-    if (fallbackKey) {
-      renderResult(fallbackKey, raw);
-    } else {
-      area.innerHTML = `<div class="rcard">
-        <p style="color:var(--muted);font-size:13px;line-height:1.65">
-          The oracle is reading your dream. Try adding what you 
-          <em style="color:var(--amber)">saw, felt, or encountered</em> — 
-          even one strong image (water, fire, a figure, a place) is enough to unlock the meaning.
-        </p></div>`;
-    }
+    area.innerHTML = `<div class="rcard">
+      <p style="color:var(--muted);font-size:12px;line-height:1.6">
+        The oracle is reading your dream. Try adding what you <em style="color:var(--amber)">saw, felt, or encountered</em> — 
+        even one strong image (water, fire, a figure, a place) is enough to unlock the meaning.
+      </p></div>`;
     return;
   }
 
@@ -737,19 +671,21 @@ function handleSearch() {
   renderResult(primary, raw, secondary);
 }
 
+// ─── RENDER RESULT ────────────────────────────────────────────────────────
 function renderResult(key, rawInput, secondaryKey) {
-  const area = document.getElementById("resultArea");
-  const d    = VAULT[key];
+  const area = document.getElementById('resultArea');
+  const d = VAULT[key];
   const paid = paidSet[key];
 
-  const kwHTML  = d.hook.map(w => `<span class="kw">${w}</span>`).join("");
+  const kwHTML = d.hook.map(w => `<span class="kw">${w}</span>`).join('');
   const secNote = secondaryKey && VAULT[secondaryKey]
-    ? `<div style="margin-top:12px;padding:8px 12px;background:rgba(139,92,246,.08);border-radius:9px;border:1px solid rgba(139,92,246,.2)">
-        <span style="font-size:9px;color:var(--purple);text-transform:uppercase;letter-spacing:1px">Also detected: </span>
-        <span style="font-size:11px;color:var(--text);font-weight:700;text-transform:capitalize;cursor:pointer"
-          onclick="renderResult('${secondaryKey}','${rawInput.replace(/'/g,"\\'")}',null)">${secondaryKey} ↗</span>
+    ? `<div class="sec-symbol">
+        <div class="sec-label">Also Detected</div>
+        <div class="sec-name" onclick="renderResult('${secondaryKey}','${rawInput.replace(/'/g,"\\'")}',null)" style="-webkit-user-select:none;user-select:none">
+          ${secondaryKey} ↗
+        </div>
       </div>`
-    : "";
+    : '';
 
   area.innerHTML = `
     <div class="rcard">
@@ -757,20 +693,20 @@ function renderResult(key, rawInput, secondaryKey) {
       <div class="sym-name">${key}</div>
       <div class="kw-sublabel">Spirit Keywords</div>
       <div class="kw-cloud">${kwHTML}</div>
-      <p class="kw-hint">These words are fragments of your dream's deeper message. Do they resonate? The connection between them is more specific than it first appears.</p>
+      <p class="kw-hint">These words are fragments of your dream's deeper message. Do they resonate?</p>
 
       ${paid
-        ? `<div id="box_${key}"><div class="revealed">
-            <span class="clarity-badge">✦ Clarity Illuminated</span>
-            <div class="clarity-title">The Full Message for You</div>
-            <p class="clarity-text">${d.clarity}</p>
-          </div></div>`
+        ? `<div class="clarity-box">
+            <div class="clarity-badge">✦ Clarity Illuminated</div>
+            <div class="clarity-title">The Full Message For You</div>
+            <div id="box_${key}" class="clarity-text"></div>
+          </div>`
         : `<div class="locked-box">
-            <p class="blur-preview">${d.clarity.slice(0,90)}…</p>
+            <p class="blur-preview">${d.clarity.slice(0,80)}…</p>
             <div class="lock-layer">
-              <div class="lock-lbl">✦ The Full Connection is Hidden</div>
-              <button class="unlock-btn" id="btn_${key}" onclick="sendClarityPayment('${key}')">
-                Illuminate the Connection ($0.01 cUSD)
+              <div class="lock-lbl">✦ Unlock Full Interpretation</div>
+              <button class="unlock-btn" id="btn_${key}" onclick="window.sendClarityPayment('${key}')">
+                Illuminate ($0.01 cUSD)
               </button>
             </div>
           </div>
@@ -779,141 +715,150 @@ function renderResult(key, rawInput, secondaryKey) {
       }
       ${secNote}
     </div>`;
+
+  if (paid && !document.getElementById(`box_${key}`).innerHTML.includes('Clarity Illuminated')) {
+    generateClarityWithAI(key, rawInput);
+  }
 }
 
-// ─── MAKE FUNCTIONS GLOBALLY ACCESSIBLE ──────────────────────────────────────
-window.sendClarityPayment = sendClarityPayment;
-window.renderResult = renderResult;
-window.handleSearch = handleSearch;
-window.searchPhrase = (q) => {
-  document.getElementById("dreamInput").value = q;
-  handleSearch();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
-
-// ─── TRENDS & CHIPS ───────────────────────────────────────────────────────────
+// ─── CHIPS & TRENDS ────────────────────────────────────────────────────────
 const TRENDS = [
-  {s:"Gold",    q:"I found gold in my dream",      count:"2,847",pct:"+22%"},
-  {s:"Flying",  q:"I was flying high in the sky",  count:"2,103",pct:"+18%"},
-  {s:"Snake",   q:"A snake bit me",                count:"1,956",pct:"+11%"},
-  {s:"Water",   q:"I was drowning in water",       count:"1,744",pct:"+9%"},
-  {s:"Death",   q:"Someone died in my dream",      count:"1,612",pct:"+7%"},
-  {s:"Moon",    q:"I was walking on the moon",     count:"1,488",pct:"+14%"},
-  {s:"Lion",    q:"A lion attacked me",            count:"1,334",pct:"+6%"},
-  {s:"Storm",   q:"I was caught in a storm",       count:"1,201",pct:"+5%"},
+  {s:'Gold',q:'I found gold in my dream',count:'2,847',pct:'+22%'},
+  {s:'Flying',q:'I was flying high in the sky',count:'2,103',pct:'+18%'},
+  {s:'Snake',q:'A snake bit me',count:'1,956',pct:'+11%'},
+  {s:'Water',q:'I was drowning in water',count:'1,744',pct:'+9%'},
+  {s:'Death',q:'Someone died in my dream',count:'1,612',pct:'+7%'},
+  {s:'Moon',q:'I was walking on the moon',count:'1,488',pct:'+14%'},
+  {s:'Lion',q:'A lion attacked me',count:'1,334',pct:'+6%'},
+  {s:'Storm',q:'I was caught in a storm',count:'1,201',pct:'+5%'},
 ];
+
 const CHIPS = [
-  "I was flying above clouds",
-  "Something was chasing me",
-  "I was falling fast",
-  "I couldn't run away",
-  "I was drowning",
-  "Someone I know died",
-  "Fire was everywhere",
-  "I was walking on the moon",
-  "A snake bit me",
-  "I was lost on a road",
-  "I found gold",
-  "I was trapped and couldn't escape",
+  'I was flying above clouds','Something was chasing me','I was falling fast','I couldn\'t run away',
+  'I was drowning','Someone I know died','Fire was everywhere','I was walking on the moon',
+  'A snake bit me','I was lost on a road','I found gold','I was trapped and couldn\'t escape'
 ];
 
 function renderChips() {
-  document.getElementById("chips").innerHTML =
-    CHIPS.map(q => `<span class="chip" onclick="window.searchPhrase('${q.replace(/'/g,"\\'")}')">${q}</span>`).join("");
-}
-function renderTrends() {
-  document.getElementById("trendsGrid").innerHTML =
-    TRENDS.map(t => `
-      <div class="tcard" onclick="window.searchPhrase('${t.q}')">
-        <div class="tsym">${t.s}</div>
-        <div class="tcount">${t.count} dreamers</div>
-        <div class="tpct">↑ ${t.pct}</div>
-      </div>`).join("");
+  document.getElementById('chips').innerHTML = CHIPS.map(q => 
+    `<span class="chip" onclick="window.searchPhrase('${q.replace(/'/g,"\\'")}')">${q}</span>`
+  ).join('');
 }
 
-// ─── MODALS ───────────────────────────────────────────────────────────────────
+function renderTrends() {
+  document.getElementById('trendsGrid').innerHTML = TRENDS.map(t => `
+    <div class="tcard" onclick="window.searchPhrase('${t.q}')">
+      <div class="tsym">${t.s}</div>
+      <div class="tcount">${t.count}</div>
+      <div class="tpct">${t.pct}</div>
+    </div>`
+  ).join('');
+}
+
+// ─── MODALS ───────────────────────────────────────────────────────────────
 const MODALS = {
-  about:{title:"About Nrowa",body:`
-    <p>Nrowa is a New-Age Dream Interpretation and Social Mapping utility built natively for the Celo / MiniPay ecosystem. It exists as a daily morning ritual — a moment to pause before the noise of the day and receive clarity from the language your subconscious spoke while you slept.</p>
-    <h5>The Vision</h5>
-    <p>Nrowa is more than a dictionary. It is a Social Oracle — a living map of collective dreaming. When users across 60+ countries process their dreams through Nrowa, patterns emerge. Shared symbols at shared moments in history carry meaning beyond the individual. Nrowa surfaces that meaning.</p>
-    <h5>Developer</h5>
-    <p>Nrowa was developed by <strong style="color:var(--amber)">Muktar Oyewumi</strong> — builder, dreamer, and believer that the next generation of blockchain-native utility will be deeply personal and spiritually intelligent.</p>
-    <h5>Contact</h5>
-    <p>Reach Muktar directly on <a href="https://wa.me/2347064597527" target="_blank">WhatsApp</a> for questions, feedback, or partnership inquiries.</p>
-    <h5>Treasury</h5>
-    <p style="font-family:monospace;font-size:10px;word-break:break-all;color:var(--amber)">0x7b1e0059366E279c702CDf9a7Caa3CC59aEdeb49</p>
-    <p style="margin-top:5px;font-size:10px;color:var(--muted)">All transactions verifiable on <a href="https://celoscan.io" target="_blank">celoscan.io</a></p>`
+  about: {
+    title: 'About Nrowa',
+    body: `
+      <p>Nrowa is a Dream Interpretation Oracle natively built for the Celo blockchain and MiniPay ecosystem.</p>
+      <h5>The Vision</h5>
+      <p>Nrowa is more than a dictionary. It is a Social Oracle—a living map of collective dreaming. When users across 60+ countries process their dreams through Nrowa, patterns emerge. Shared symbols carry meaning beyond the individual.</p>
+      <h5>How It Works</h5>
+      <p>Describe your dream. Nrowa identifies primary and secondary symbols. Free insights appear instantly. For deeper clarity, unlock the full interpretation with a 0.01 cUSD payment on the Celo blockchain—settled in seconds via MiniPay.</p>
+      <h5>Developer</h5>
+      <p>Nrowa was developed by <strong style="color:var(--amber)">Muktar Oyewumi</strong>. For questions or feedback: <a href="https://wa.me/2347064597527" target="_blank">WhatsApp</a></p>
+    `
   },
-  privacy:{title:"Privacy Policy",body:`
-    <p>Nrowa takes your privacy seriously.</p>
-    <h5>What We Use</h5>
-    <ul>
-      <li>Your Celo wallet address is read locally from your device's injected provider (window.ethereum) for on-chain transactions only. It is never transmitted to any Nrowa server.</li>
-      <li>Dream text is processed entirely on-device using our local Symbol Vault. No dream content is sent externally.</li>
-    </ul>
-    <h5>What We Never Do</h5>
-    <ul>
-      <li>We do not sell, share, or monetize your data in any form.</li>
-      <li>We use no cookies, advertising trackers, or analytics SDKs of any kind.</li>
-      <li>We do not store your search history.</li>
-    </ul>
-    <h5>Blockchain</h5>
-    <p>Payment transactions are recorded publicly on the Celo blockchain — a property of the network, not a Nrowa choice. Verify all payments at celoscan.io.</p>
-    <p style="margin-top:10px;font-size:10px;color:var(--muted)">Last updated: March 2026</p>`
+  privacy: {
+    title: 'Privacy Policy',
+    body: `
+      <p>Nrowa takes your privacy seriously.</p>
+      <h5>What We Use</h5>
+      <ul>
+        <li>Your Celo wallet address is read locally from your injected provider for transactions only. Never transmitted to any server.</li>
+        <li>Dream text is processed entirely on-device. No content is sent externally.</li>
+      </ul>
+      <h5>What We Never Do</h5>
+      <ul>
+        <li>We do not sell, share, or monetize your data.</li>
+        <li>No cookies, trackers, or analytics SDKs.</li>
+        <li>No search history stored.</li>
+      </ul>
+      <h5>Blockchain</h5>
+      <p>Payments are recorded publicly on Celo—a network property, not a Nrowa choice. Verify all transactions at celoscan.io.</p>
+    `
   },
-  terms:{title:"Terms of Use",body:`
-    <p>By using Nrowa, you agree to the following.</p>
-    <h5>Entertainment & Clarity</h5>
-    <p>Nrowa's interpretations are for clarity and entertainment purposes only. They do not constitute professional psychological, medical, spiritual, or financial advice.</p>
-    <h5>Payments</h5>
-    <ul>
-      <li>Deep Clarity fee: 0.01 cUSD per symbol, settled on-chain.</li>
-      <li>All payments are final. Blockchain transactions cannot be reversed.</li>
-      <li>You are responsible for maintaining sufficient cUSD balance.</li>
-    </ul>
-    <h5>Eligibility</h5>
-    <p>You must be 13 or older to use Nrowa.</p>
-    <h5>Disclaimer</h5>
-    <p>Nrowa is an independent product by Muktar Oyewumi. It is not affiliated with, endorsed by, or an official product of the Celo Foundation, Opera Software, or MiniPay. Nrowa uses their open developer infrastructure under their respective public terms.</p>
-    <p style="margin-top:10px;font-size:10px;color:var(--muted)">Developer: Muktar Oyewumi · March 2026</p>`
+  terms: {
+    title: 'Terms of Use',
+    body: `
+      <p>By using Nrowa, you agree to the following.</p>
+      <h5>Entertainment & Clarity</h5>
+      <p>Nrowa's interpretations are for clarity and entertainment. They do not constitute professional psychological, medical, spiritual, or financial advice.</p>
+      <h5>Payments</h5>
+      <ul>
+        <li>Unlock fee: 0.01 cUSD per symbol, settled on-chain.</li>
+        <li>All payments are final. Blockchain transactions cannot be reversed.</li>
+        <li>You are responsible for maintaining sufficient cUSD balance.</li>
+      </ul>
+      <h5>Eligibility</h5>
+      <p>You must be 13 or older to use Nrowa.</p>
+      <h5>Disclaimer</h5>
+      <p>Nrowa is an independent product. It is not affiliated with the Celo Foundation, Opera Software, or MiniPay. Nrowa uses their open developer infrastructure under their public terms.</p>
+    `
   },
-  trends:{title:"Dream Trends This Week",body:
-    TRENDS.map(t=>`
-      <div style="display:flex;justify-content:space-between;align-items:center;
-        padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer"
+  trends: {
+    title: 'Dream Trends This Week',
+    body: TRENDS.map(t => `
+      <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer"
         onclick="closeModal();window.searchPhrase('${t.q}')">
         <div>
-          <div style="font-size:14px;font-weight:800;color:var(--amber)">${t.s}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:2px">${t.count} dreamers this week</div>
+          <div style="font-size:13px;font-weight:800;color:var(--amber)">${t.s}</div>
+          <div style="font-size:9px;color:var(--muted);margin-top:2px">${t.count} dreamers</div>
         </div>
-        <div style="font-size:16px;font-weight:900;color:var(--green)">${t.pct}</div>
-      </div>`).join("")
+        <div style="font-size:12px;font-weight:800;color:var(--green)">${t.pct}</div>
+      </div>`).join('')
   }
 };
 
 window.openModal = (type) => {
   const m = MODALS[type];
-  document.getElementById("mtitle").textContent = m.title;
-  document.getElementById("mbody").innerHTML    = m.body;
-  document.getElementById("overlay").classList.add("open");
+  document.getElementById('mtitle').textContent = m.title;
+  document.getElementById('mbody').innerHTML = m.body;
+  document.getElementById('overlay').classList.add('open');
 };
-window.closeModal = () => document.getElementById("overlay").classList.remove("open");
-window.outsideClose = (e) => { if(e.target===document.getElementById("overlay")) window.closeModal(); };
 
-// ─── KEYBOARD ─────────────────────────────────────────────────────────────────
-document.getElementById("dreamInput").addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSearch(); }
+window.closeModal = () => document.getElementById('overlay').classList.remove('open');
+
+window.outsideClose = (e) => {
+  if (e.target === document.getElementById('overlay')) window.closeModal();
+};
+
+window.searchPhrase = (q) => {
+  document.getElementById('dreamInput').value = q;
+  handleSearch();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.sendClarityPayment = sendClarityPayment;
+window.renderResult = renderResult;
+window.handleSearch = handleSearch;
+
+// ─── KEYBOARD ─────────────────────────────────────────────────────────────
+document.getElementById('dreamInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+    e.preventDefault();
+    handleSearch();
+  }
 });
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-// ─── BOOT ─────────────────────────────────────────────────────────────────────
-renderChips();
-renderTrends();
-connectWallet();
-
+// ─── BOOT ─────────────────────────────────────────────────────────────────
+(async () => {
+  await detectMinipay();
+  renderChips();
+  renderTrends();
+  await connectWallet();
+})();
 </script>
+
 </body>
 </html>
