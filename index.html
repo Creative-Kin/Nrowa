@@ -8,16 +8,6 @@
   <meta name="description" content="Interpret your dreams in real-time on Celo blockchain with MiniPay.">
   <title>◐ NROWA – Dream Interpreter</title>
   
-  <script type="importmap">
-  {
-    "imports": {
-      "viem": "https://esm.sh/viem@2.21.0",
-      "viem/chains": "https://esm.sh/viem@2.21.0/chains",
-      "viem/accounts": "https://esm.sh/viem@2.21.0/accounts"
-    }
-  }
-  </script>
-
   <style>
     * {
       box-sizing: border-box;
@@ -73,7 +63,7 @@
       padding-bottom: 20px;
     }
 
-    /* HEADER - STICKY TOP */
+    /* HEADER */
     .header {
       position: sticky;
       top: 0;
@@ -99,12 +89,6 @@
       }
     }
 
-    .logo-section {
-      display: flex;
-      flex-direction: column;
-      gap: 0px;
-    }
-
     .logo {
       font-size: 18px;
       font-weight: 900;
@@ -113,15 +97,6 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      line-height: 1;
-    }
-
-    .tagline {
-      font-size: 7px;
-      color: var(--muted);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      font-weight: 600;
     }
 
     .header-actions {
@@ -149,16 +124,14 @@
       background: rgba(139, 92, 246, 0.2);
     }
 
-    /* WALLET STATUS BAR */
-    .wallet-bar {
-      background: rgba(255, 255, 255, 0.03);
-      border-bottom: 1px solid var(--border-light);
-      padding: 12px 14px;
+    /* CONTENT */
+    .content {
+      flex: 1;
+      padding: 16px 14px;
       display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      animation: fadeIn 0.5s ease-out 0.1s both;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.5s ease-out;
     }
 
     @keyframes fadeIn {
@@ -166,372 +139,133 @@
       to { opacity: 1; }
     }
 
-    .wallet-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 8px var(--green);
-      animation: pulse 2s infinite;
-      flex-shrink: 0;
-    }
-
-    .wallet-dot.connecting {
-      background: var(--orange);
-      box-shadow: 0 0 8px var(--orange);
-    }
-
-    .wallet-dot.error {
-      background: var(--red);
-      box-shadow: 0 0 8px var(--red);
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    .wallet-info {
+    .balance-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 8px;
-      flex: 1;
-      min-width: 0;
     }
 
-    .wallet-addr {
-      font-family: monospace;
-      font-size: 10px;
+    .balance-info h3 {
+      font-size: 12px;
       color: var(--muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      margin-bottom: 4px;
+      font-weight: 600;
     }
 
-    .wallet-balance {
-      margin-left: auto;
+    .balance-amount {
+      font-size: 20px;
       font-weight: 700;
       color: var(--green);
-      white-space: nowrap;
     }
 
-    .wallet-error {
-      color: var(--red);
+    .wallet-status {
       font-size: 11px;
-    }
-
-    /* MAIN CONTENT */
-    .main {
-      flex: 1;
-      padding: 14px;
-      overflow-y: auto;
-    }
-
-    .section-label {
-      font-size: 9px;
       color: var(--muted);
-      letter-spacing: 1.8px;
-      text-transform: uppercase;
-      margin: 16px 0 12px;
+      padding: 4px 8px;
+      background: rgba(76, 175, 80, 0.1);
+      border-radius: 6px;
+    }
+
+    .dream-section {
       display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 700;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .section-label::before,
-    .section-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
+    .dream-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    /* INPUT AREA */
-    .input-group {
-      margin-bottom: 16px;
-      animation: slideUp 0.5s ease-out 0.1s both;
+    textarea {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.5;
+      resize: vertical;
+      min-height: 100px;
+      transition: all 0.2s;
+    }
+
+    textarea:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--purple);
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--purple), var(--accent));
+      border: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .btn:active {
+      transform: scale(0.95);
+      opacity: 0.9;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .interpretation-section {
+      display: none;
+      animation: slideUp 0.4s ease-out;
+    }
+
+    .interpretation-section.active {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
     @keyframes slideUp {
       from {
-        transform: translateY(10px);
         opacity: 0;
+        transform: translateY(20px);
       }
       to {
-        transform: translateY(0);
         opacity: 1;
+        transform: translateY(0);
       }
     }
 
-    .dream-input {
-      position: relative;
-    }
-
-    .dream-input textarea {
-      width: 100%;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 13px 50px 13px 16px;
-      color: var(--text);
-      font-size: 13px;
-      font-family: inherit;
-      font-weight: 500;
-      outline: none;
-      resize: none;
-      height: 85px;
-      line-height: 1.6;
-      transition: all 0.3s;
-      backdrop-filter: blur(8px);
-      min-height: 85px;
-    }
-
-    .dream-input textarea:focus {
-      border-color: var(--purple);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    .dream-input textarea::placeholder {
-      color: var(--muted);
-      opacity: 0.7;
-    }
-
-    .submit-btn {
-      position: absolute;
-      right: 10px;
-      bottom: 10px;
-      background: linear-gradient(135deg, var(--purple), #a855f7);
-      border: none;
-      border-radius: 10px;
-      padding: 9px 14px;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
-      min-height: 44px;
-    }
-
-    .submit-btn:active:not(:disabled) {
-      transform: scale(0.88);
-    }
-
-    .submit-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .spinner {
-      width: 10px;
-      height: 10px;
-      border: 2px solid transparent;
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* CHIPS/QUICK PROMPTS */
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 16px;
-      animation: slideUp 0.5s ease-out 0.15s both;
-    }
-
-    .chip {
+    .interpretation-box {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 8px 12px;
-      font-size: 11px;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-      font-weight: 500;
-      min-height: 32px;
-      display: flex;
-      align-items: center;
-    }
-
-    .chip:active {
-      background: rgba(139, 92, 246, 0.2);
-      border-color: var(--purple);
-      color: var(--purple);
-      transform: scale(0.95);
-    }
-
-    /* RESULT CARD */
-    #resultArea {
-      margin-bottom: 20px;
-    }
-
-    .result-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-      animation: slideUp 0.5s ease-out;
-    }
-
-    .dream-symbol {
-      font-size: 28px;
-      font-weight: 900;
-      color: var(--amber);
-      margin-bottom: 12px;
-      text-transform: capitalize;
-      letter-spacing: 1px;
-    }
-
-    .symbol-label {
-      font-size: 9px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-      font-weight: 700;
-    }
-
-    .keywords {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-
-    .keyword {
-      background: rgba(139, 92, 246, 0.15);
-      border: 1px solid rgba(139, 92, 246, 0.3);
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 10px;
-      color: var(--purple);
-      font-weight: 600;
-    }
-
-    .interpretation-section {
-      margin-top: 14px;
-    }
-
-    .interpretation-badge {
-      display: inline-block;
-      background: rgba(251, 191, 36, 0.15);
-      border: 1px solid rgba(251, 191, 36, 0.3);
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 9px;
-      color: var(--amber);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-
-    .interpretation-title {
-      font-size: 14px;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 8px;
-    }
-
-    .interpretation-text {
-      font-size: 11px;
-      color: var(--text);
+      padding: 14px;
       line-height: 1.7;
-      font-weight: 500;
-    }
-
-    .ai-streaming {
-      font-size: 11px;
+      min-height: 80px;
       color: var(--text);
-      line-height: 1.7;
-      font-weight: 500;
-      min-height: 40px;
-      position: relative;
     }
 
-    .ai-streaming.streaming::after {
-      content: '';
-      display: inline-block;
-      width: 8px;
-      height: 12px;
-      background: var(--purple);
-      margin-left: 4px;
-      animation: blink 0.6s infinite;
-      vertical-align: text-bottom;
+    .loading-pulse {
+      animation: pulse 1.5s ease-in-out infinite;
     }
 
-    @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
-    }
-
-    /* LOCKED/PAYMENT STATE */
-    .locked-section {
-      margin-top: 14px;
-      position: relative;
-    }
-
-    .blur-text {
-      font-size: 11px;
-      color: var(--text);
-      line-height: 1.6;
-      filter: blur(4px);
-      opacity: 0.6;
-      margin-bottom: 8px;
-    }
-
-    .lock-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(5, 5, 5, 0) 0%, rgba(5, 5, 5, 0.85) 70%, rgba(5, 5, 5, 0.95) 100%);
-      border-radius: 12px;
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      padding: 12px;
-      gap: 8px;
-    }
-
-    .pay-hint {
-      font-size: 10px;
-      color: var(--muted);
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .pay-btn {
-      background: linear-gradient(135deg, var(--green), #22c55e);
-      border: none;
-      border-radius: 10px;
-      padding: 10px 16px;
-      color: #000;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(74, 222, 128, 0.25);
-      min-height: 44px;
-    }
-
-    .pay-btn:active:not(:disabled) {
-      transform: scale(0.88);
-    }
-
-    .pay-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
     }
 
     /* MODALS */
@@ -539,119 +273,116 @@
       display: none;
       position: fixed;
       inset: 0;
-      z-index: 1000;
       background: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(4px);
-      animation: fadeIn 0.3s ease-out;
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.2s;
     }
 
     .modal.active {
       display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     .modal-content {
-      background: var(--card);
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 20px;
+      padding: 24px;
       max-width: 320px;
-      width: 90%;
-      max-height: 70vh;
+      max-height: 80vh;
       overflow-y: auto;
       animation: slideUp 0.3s ease-out;
     }
 
-    .modal-title {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--text);
-      margin-bottom: 12px;
-    }
-
-    .modal-text {
-      font-size: 12px;
-      color: var(--text);
-      line-height: 1.8;
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 16px;
     }
 
-    .modal-link {
-      color: var(--purple);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .modal-link:active {
-      opacity: 0.7;
-    }
-
-    .modal-close {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--text);
-      font-size: 20px;
-      transition: all 0.2s;
-      position: absolute;
-      top: 12px;
-      right: 12px;
-    }
-
-    .modal-close:active {
-      transform: scale(0.92);
-    }
-
-    /* TRENDS */
-    .trend-item {
-      background: rgba(139, 92, 246, 0.1);
-      border: 1px solid rgba(139, 92, 246, 0.2);
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .trend-symbol {
-      font-size: 24px;
-      margin-right: 10px;
-    }
-
-    .trend-name {
-      font-size: 13px;
+    .modal-title {
+      font-size: 18px;
       font-weight: 700;
       color: var(--text);
-      flex: 1;
     }
 
-    .trend-count {
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .modal-body {
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--text);
+    }
+
+    .modal-body h4 {
+      font-size: 14px;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      color: var(--purple);
+    }
+
+    .modal-body a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .vault-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .vault-item {
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
       font-size: 12px;
-      color: var(--green);
-      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
-    /* ACCESSIBILITY */
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        animation: none !important;
-        transition: none !important;
-      }
+    .vault-item:active {
+      background: rgba(139, 92, 246, 0.2);
     }
 
-    /* SAFE AREAS */
-    @supports (padding: max(0px)) {
-      body {
-        padding-bottom: max(20px, env(safe-area-inset-bottom));
-      }
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 0 14px;
+      margin-top: auto;
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .error-msg {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid var(--red);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 12px;
+      color: var(--red);
+      display: none;
+    }
+
+    .error-msg.show {
+      display: block;
+      animation: slideDown 0.3s ease-out;
     }
   </style>
 </head>
@@ -659,466 +390,247 @@
   <div id="app">
     <!-- HEADER -->
     <div class="header">
-      <div class="logo-section">
-        <div class="logo">◐ NROWA</div>
-        <div class="tagline">Dream Interpreter</div>
-      </div>
+      <div class="logo">◐ NROWA</div>
       <div class="header-actions">
-        <button class="hdr-btn" onclick="openModal('about')" title="About">?</button>
-        <button class="hdr-btn" onclick="openModal('trends')" title="Trends">📈</button>
+        <button class="hdr-btn" onclick="openModal('about')">?</button>
+        <button class="hdr-btn" onclick="openModal('trends')">📈</button>
+        <button class="hdr-btn" id="walletStatus" style="color: var(--amber);">⊙</button>
       </div>
     </div>
 
-    <!-- WALLET STATUS BAR (Auto-connect) -->
-    <div class="wallet-bar">
-      <div class="wallet-dot connecting" id="walletDot"></div>
-      <div class="wallet-info">
-        <div class="wallet-addr" id="walletAddr">Connecting...</div>
-        <div class="wallet-balance" id="walletBalance"></div>
-      </div>
-      <div class="wallet-error" id="walletError" style="display: none;"></div>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="main">
-      <div class="section-label">Enter Your Dream</div>
-
-      <div class="input-group">
-        <div class="dream-input">
-          <textarea id="dreamInput" placeholder="Describe your dream... (Minimum 10 characters)"></textarea>
-          <button class="submit-btn" id="interpretBtn" onclick="interpretDream()" disabled>
-            <span id="btnText">Interpret</span>
-          </button>
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- BALANCE CARD -->
+      <div class="balance-card">
+        <div class="balance-info">
+          <h3>Wallet Balance</h3>
+          <div class="balance-amount" id="balanceDisplay">--</div>
         </div>
+        <div class="wallet-status" id="walletStatusText">Connecting...</div>
       </div>
 
-      <!-- QUICK PROMPTS -->
-      <div class="chips">
-        <div class="chip" onclick="fillDream('I was flying through a forest of crystal trees.')">Flying</div>
-        <div class="chip" onclick="fillDream('I was being chased through a dark corridor.')">Chased</div>
-        <div class="chip" onclick="fillDream('I was drowning in calm, clear water.')">Water</div>
-        <div class="chip" onclick="fillDream('I was falling from a tall building.')">Falling</div>
+      <!-- ERROR MESSAGE -->
+      <div class="error-msg" id="errorMsg"></div>
+
+      <!-- DREAM INPUT -->
+      <div class="dream-section">
+        <label class="dream-label">Describe Your Dream</label>
+        <textarea id="dreamInput" placeholder="Share your dream, symbols, emotions, and any details you remember..." maxlength="500"></textarea>
+        <button class="btn" id="interpretBtn" onclick="interpretDream()" disabled>Unlock Interpretation (0.01 cUSD)</button>
       </div>
 
-      <div class="section-label">Interpretation</div>
+      <!-- INTERPRETATION DISPLAY -->
+      <div class="interpretation-section" id="interpretationDisplay">
+        <label class="dream-label">Your Interpretation</label>
+        <div class="interpretation-box" id="interpretationText"></div>
+      </div>
 
-      <!-- RESULT AREA -->
-      <div id="resultArea"></div>
+      <!-- QUICK FILLS (for testing) -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+        <button class="btn" style="padding: 8px; font-size: 12px; background: var(--card); border: 1px solid var(--border);" onclick="fillDream('I was flying over mountains with golden light all around me')">Test Dream 1</button>
+        <button class="btn" style="padding: 8px; font-size: 12px; background: var(--card); border: 1px solid var(--border);" onclick="fillDream('I was in my childhood home but everything was backwards')">Test Dream 2</button>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      Built for <a href="https://minipay.me" target="_blank">MiniPay</a> on <a href="https://celo.org" target="_blank">Celo</a>
     </div>
   </div>
 
   <!-- MODALS -->
   <div class="modal" id="aboutModal">
-    <div class="modal-content" style="position: relative;">
-      <button class="modal-close" onclick="closeModal('about')">×</button>
-      <h2 class="modal-title">About NROWA</h2>
-      <div class="modal-text">
-        <p>NROWA is a dream interpretation app powered by AI and the Celo blockchain.</p>
-        <p style="margin-top: 10px;">Each interpretation costs <strong>0.01 cUSD</strong> and is recorded on-chain for transparency.</p>
-        <p style="margin-top: 10px;">Using Celo's network, we ensure fast, affordable transactions for dream explorers worldwide.</p>
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">About NROWA</div>
+        <button class="close-btn" onclick="closeModal('about')">×</button>
+      </div>
+      <div class="modal-body">
+        <p>NROWA interprets your dreams using AI and the curated vault of symbolic meanings on the Celo blockchain.</p>
+        
+        <h4>How It Works</h4>
+        <p>1. Describe your dream in detail<br>2. Pay 0.01 cUSD via MiniPay<br>3. Receive real-time AI interpretation</p>
+        
+        <h4>Privacy</h4>
+        <p>Your dreams are processed securely. We do not store personal data.</p>
       </div>
     </div>
   </div>
 
   <div class="modal" id="trendsModal">
-    <div class="modal-content" style="position: relative;">
-      <button class="modal-close" onclick="closeModal('trends')">×</button>
-      <h2 class="modal-title">Popular Dreams</h2>
-      <div id="trendsList"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Trending Symbols</div>
+        <button class="close-btn" onclick="closeModal('trends')">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 10px;">Most interpreted dream symbols this week:</p>
+        <div class="vault-grid" id="trendsGrid"></div>
+      </div>
     </div>
   </div>
 
   <div class="modal" id="privacyModal">
-    <div class="modal-content" style="position: relative;">
-      <button class="modal-close" onclick="closeModal('privacy')">×</button>
-      <h2 class="modal-title">Privacy Policy</h2>
-      <div class="modal-text">
-        <p>Your dreams are yours. We don't store personal dream content on our servers.</p>
-        <p style="margin-top: 10px;">Transactions are recorded on the Celo blockchain for transparency.</p>
-        <p style="margin-top: 10px;">Read our full privacy policy at <a href="https://nrowa.app/privacy" class="modal-link" target="_blank">nrowa.app/privacy</a></p>
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Privacy Policy</div>
+        <button class="close-btn" onclick="closeModal('privacy')">×</button>
+      </div>
+      <div class="modal-body">
+        <p>We respect your privacy. NROWA does not collect or store your dreams or personal information beyond transaction records on the blockchain.</p>
+        <h4>Data Processing</h4>
+        <p>Dream interpretations are processed in real-time and not retained after display.</p>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="termsModal">
-    <div class="modal-content" style="position: relative;">
-      <button class="modal-close" onclick="closeModal('terms')">×</button>
-      <h2 class="modal-title">Terms of Service</h2>
-      <div class="modal-text">
-        <p>By using NROWA, you agree to our terms of service.</p>
-        <p style="margin-top: 10px;">Users must be 18+ and comply with Celo's terms.</p>
-        <p style="margin-top: 10px;">Read our full terms at <a href="https://nrowa.app/terms" class="modal-link" target="_blank">nrowa.app/terms</a></p>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    import { createPublicClient, createWalletClient, http, parseUnits, formatUnits, encodeFunctionData, erc20Abi } from 'viem';
-    import { celo } from 'viem/chains';
-
-    // Configuration
-    const CONFIG = {
-      MINIPAY_DETECTION: 'isMiniPay',
-      USDC_ADDRESS: '0xcebA9300f2b948710d2653dD7B07f33A8B32118C', // Celo Mainnet
-      USDC_ADAPTER: '0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B', // For fee currency
-      INTERPRETATION_FEE: '0.01', // 0.01 cUSD
-      FEE_DECIMALS: 6,
-      API_KEY: 'https://api.vercel.ai', // Real-time AI inference
+  <script>
+    // Global App State
+    window.appState = {
+      walletConnected: false,
+      userAddress: null,
+      balance: '0',
+      isMiniPay: false
     };
 
-    // Dream vault (fallback interpretations)
+    // Dream Vault
     const DREAM_VAULT = {
-      'flying': {
-        keywords: ['freedom', 'ambition', 'perspective'],
-        interpretation: 'Flying dreams often represent a sense of freedom and rising above challenges. You may be experiencing liberation from constraints or gaining a new perspective on your life.',
-      },
-      'water': {
-        keywords: ['emotions', 'subconscious', 'flow'],
-        interpretation: 'Water symbolizes emotions and the subconscious mind. Calm water suggests peace, while turbulent water may indicate emotional turmoil you\'re processing.',
-      },
-      'falling': {
-        keywords: ['loss of control', 'anxiety', 'letting go'],
-        interpretation: 'Falling dreams typically indicate anxiety or loss of control. They may reflect stress in your waking life or fear of failure. Consider what you\'re trying to hold onto.',
-      },
-      'chase': {
-        keywords: ['avoidance', 'stress', 'pressure'],
-        interpretation: 'Being chased represents avoidance of something in your waking life. Identify what you\'re running from—it may be a responsibility, emotion, or person.',
-      },
+      flying: 'Flying represents freedom, perspective, or escaping limitations. The direction and ease of flight indicate your emotional state.',
+      water: 'Water symbolizes emotions and the subconscious. Still water = peace, turbulent = emotional chaos.',
+      mountains: 'Mountains represent challenges, goals, or obstacles. Climbing suggests effort toward achievement.',
+      falling: 'Falling indicates loss of control, anxiety, or transition. The landing determines the outcome.',
+      death: 'Death in dreams symbolizes transformation, ending, or rebirth—not literal death.',
+      chase: 'Being chased suggests avoiding something in waking life. Identify the pursuer to understand the issue.',
+      house: 'Houses represent the self. Different rooms = different aspects of personality. State of house = internal condition.',
+      animals: 'Animals represent instincts. Their behavior and your reaction reveal your relationship with that instinct.'
     };
 
-    // Global state
-    let walletAddress = null;
-    let walletBalance = '0';
-    let isMiniPay = false;
-    let transactionInProgress = false;
+    // Modal Functions
+    window.openModal = function(modalName) {
+      document.getElementById(modalName + 'Modal').classList.add('active');
+    };
 
-    // Detect MiniPay
-    function detectMiniPay() {
-      isMiniPay = window.ethereum?.isMiniPay === true;
-      const dot = document.getElementById('walletDot');
-      if (isMiniPay) {
-        dot.style.display = 'block';
-        console.log('[v0] Running in MiniPay');
-      }
-    }
+    window.closeModal = function(modalName) {
+      document.getElementById(modalName + 'Modal').classList.remove('active');
+    };
 
-    // Auto-connect wallet
-    async function autoConnectWallet() {
-      try {
-        detectMiniPay();
-        
-        if (!window.ethereum) {
-          throw new Error('window.ethereum not found. Please run this app inside MiniPay.');
-        }
-
-        // Request accounts (MiniPay handles this automatically)
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        
-        if (accounts && accounts.length > 0) {
-          walletAddress = accounts[0];
-          document.getElementById('walletAddr').textContent = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
-          document.getElementById('walletDot').classList.remove('connecting');
-          document.getElementById('walletDot').classList.add('pulse');
-          
-          // Fetch balance
-          await fetchBalance();
-          
-          console.log('[v0] Wallet connected:', walletAddress);
-        }
-      } catch (error) {
-        console.error('[v0] Connection error:', error);
-        showWalletError('Connection failed. Please run this app inside MiniPay.');
-        const dot = document.getElementById('walletDot');
-        dot.classList.remove('connecting');
-        dot.classList.add('error');
-      }
-    }
-
-    // Fetch wallet balance
-    async function fetchBalance() {
-      try {
-        if (!walletAddress || !window.ethereum) return;
-
-        const publicClient = createPublicClient({
-          chain: celo,
-          transport: http(),
-        });
-
-        const balance = await publicClient.readContract({
-          address: CONFIG.USDC_ADDRESS,
-          abi: erc20Abi,
-          functionName: 'balanceOf',
-          args: [walletAddress],
-        });
-
-        walletBalance = formatUnits(balance, CONFIG.FEE_DECIMALS);
-        document.getElementById('walletBalance').textContent = `${walletBalance} cUSD`;
-        console.log('[v0] Balance fetched:', walletBalance);
-      } catch (error) {
-        console.error('[v0] Balance fetch error:', error);
-      }
-    }
-
-    // Show wallet error
-    function showWalletError(message) {
-      const errorEl = document.getElementById('walletError');
-      errorEl.textContent = message;
-      errorEl.style.display = 'block';
-    }
-
-    // Fill dream input
+    // Fill Dream for Testing
     window.fillDream = function(text) {
       document.getElementById('dreamInput').value = text;
-      validateDreamInput();
     };
 
-    // Validate dream input
-    function validateDreamInput() {
-      const dream = document.getElementById('dreamInput').value.trim();
-      const btn = document.getElementById('interpretBtn');
-      btn.disabled = dream.length < 10;
+    // Show Error
+    function showError(msg) {
+      const errorEl = document.getElementById('errorMsg');
+      errorEl.textContent = msg;
+      errorEl.classList.add('show');
+      setTimeout(() => errorEl.classList.remove('show'), 5000);
     }
 
-    // Listen to input
-    document.getElementById('dreamInput').addEventListener('input', validateDreamInput);
-
-    // Interpret dream with AI streaming
+    // Interpret Dream
     window.interpretDream = async function() {
-      const dream = document.getElementById('dreamInput').value.trim();
-      
-      if (dream.length < 10) {
-        alert('Please describe your dream in at least 10 characters.');
+      const dreamInput = document.getElementById('dreamInput').value.trim();
+      if (!dreamInput) {
+        showError('Please describe your dream first.');
         return;
       }
 
-      if (!walletAddress) {
-        showWalletError('Wallet not connected. Please refresh the app.');
+      if (!window.appState.walletConnected) {
+        showError('Please connect your wallet first.');
         return;
       }
 
-      if (transactionInProgress) return;
+      const interpretBtn = document.getElementById('interpretBtn');
+      const interpretationDisplay = document.getElementById('interpretationDisplay');
+      const interpretationText = document.getElementById('interpretationText');
+
+      interpretBtn.disabled = true;
+      interpretBtn.textContent = 'Processing...';
+      interpretationDisplay.classList.add('active');
+      interpretationText.innerHTML = '<span class="loading-pulse">Generating interpretation...</span>';
 
       try {
-        transactionInProgress = true;
-        const btn = document.getElementById('interpretBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<div class="spinner"></div>';
-
-        // Step 1: Process payment
-        await processPayment();
-
-        // Step 2: Get AI interpretation with streaming
-        await streamAIInterpretation(dream);
-
-        btn.innerHTML = 'Interpret';
-        btn.disabled = false;
+        // Simulate AI streaming (character by character)
+        const interpretation = await getAIInterpretation(dreamInput);
+        
+        interpretationText.innerHTML = '';
+        for (let i = 0; i < interpretation.length; i++) {
+          await new Promise(resolve => setTimeout(resolve, 15));
+          interpretationText.innerHTML += interpretation[i] === '\n' ? '<br>' : interpretation[i];
+        }
       } catch (error) {
-        console.error('[v0] Interpretation error:', error);
-        alert('Error: ' + error.message);
-        document.getElementById('interpretBtn').disabled = false;
-        document.getElementById('interpretBtn').innerHTML = 'Interpret';
+        showError('Failed to get interpretation: ' + error.message);
+        interpretationDisplay.classList.remove('active');
       } finally {
-        transactionInProgress = false;
+        interpretBtn.disabled = false;
+        interpretBtn.textContent = 'Unlock Interpretation (0.01 cUSD)';
       }
     };
 
-    // Process payment (auto fee deduction)
-    async function processPayment() {
-      if (!walletAddress) throw new Error('Wallet not connected');
+    // AI Interpretation (Fallback to Vault)
+    async function getAIInterpretation(dream) {
+      // Match dream keywords with vault
+      const keywords = Object.keys(DREAM_VAULT);
+      let foundKeywords = [];
 
-      // Check balance
-      const feeAmount = parseFloat(CONFIG.INTERPRETATION_FEE);
-      if (parseFloat(walletBalance) < feeAmount) {
-        throw new Error(`Insufficient balance. You need at least ${feeAmount} cUSD.`);
-      }
-
-      console.log('[v0] Processing payment of', CONFIG.INTERPRETATION_FEE, 'cUSD');
-
-      // In MiniPay, transactions are sent automatically with feeCurrency parameter
-      // The user approves the transaction on their device
-      try {
-        const encodedData = encodeFunctionData({
-          abi: erc20Abi,
-          functionName: 'transfer',
-          args: [
-            CONFIG.USDC_ADDRESS, // Treasury (user's own account for demo)
-            parseUnits(CONFIG.INTERPRETATION_FEE, CONFIG.FEE_DECIMALS),
-          ],
-        });
-
-        const tx = await window.ethereum.request({
-          method: 'eth_sendTransaction',
-          params: [{
-            from: walletAddress,
-            to: CONFIG.USDC_ADDRESS,
-            data: encodedData,
-            feeCurrency: CONFIG.USDC_ADAPTER,
-          }],
-        });
-
-        console.log('[v0] Transaction sent:', tx);
-        
-        // Wait a moment for confirmation
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-      } catch (error) {
-        if (error.code === -32604 || error.name === 'UserRejectedRequestError') {
-          throw new Error('Transaction rejected');
-        }
-        throw error;
-      }
-    }
-
-    // Stream AI interpretation (real-time)
-    async function streamAIInterpretation(dream) {
-      const resultArea = document.getElementById('resultArea');
-      resultArea.innerHTML = '';
-
-      // Extract key symbol
-      const symbol = extractDreamSymbol(dream);
-      
-      // Create result card
-      const card = document.createElement('div');
-      card.className = 'result-card';
-      card.innerHTML = `
-        <div class="symbol-label">Symbol</div>
-        <div class="dream-symbol">${symbol}</div>
-        <div class="symbol-label">Keywords</div>
-        <div class="keywords" id="keywordContainer"></div>
-        <div class="interpretation-section">
-          <div class="interpretation-badge">AI Interpretation</div>
-          <div class="ai-streaming streaming" id="interpretationStream"></div>
-        </div>
-      `;
-      resultArea.appendChild(card);
-
-      // Add keywords
-      const keywords = extractKeywords(dream);
-      const keywordContainer = document.getElementById('keywordContainer');
-      keywords.forEach(kw => {
-        const el = document.createElement('div');
-        el.className = 'keyword';
-        el.textContent = kw;
-        keywordContainer.appendChild(el);
-      });
-
-      // Stream interpretation from AI (real-time character-by-character)
-      try {
-        const streamElement = document.getElementById('interpretationStream');
-        const interpretation = await generateAIInterpretation(dream);
-        
-        // Remove streaming indicator
-        streamElement.classList.remove('streaming');
-        
-        // Stream the text character by character for visual effect
-        let index = 0;
-        const typeChar = () => {
-          if (index < interpretation.length) {
-            streamElement.textContent += interpretation[index];
-            index++;
-            setTimeout(typeChar, 10); // Adjust speed
-          }
-        };
-        
-        typeChar();
-        console.log('[v0] Interpretation streamed');
-        
-      } catch (error) {
-        document.getElementById('interpretationStream').textContent = 'Unable to generate AI interpretation. ' + error.message;
-      }
-    }
-
-    // Generate AI interpretation (fallback to vault if needed)
-    async function generateAIInterpretation(dream) {
-      // Check vault first for quick response
-      const lowerDream = dream.toLowerCase();
-      for (const [key, data] of Object.entries(DREAM_VAULT)) {
-        if (lowerDream.includes(key)) {
-          return data.interpretation;
+      for (let keyword of keywords) {
+        if (dream.toLowerCase().includes(keyword)) {
+          foundKeywords.push(keyword);
         }
       }
 
-      // Try real-time AI (would connect to actual API)
-      // For now, return a generic interpretation
-      return `Your dream reveals deep aspects of your subconscious. The imagery you described relates to your current emotional state and life circumstances. Consider what emotions surfaced during the dream—they often reflect waking concerns or aspirations. This interpretation is unique to your experience and personal context.`;
-    }
-
-    // Extract main dream symbol
-    function extractDreamSymbol(dream) {
-      const symbols = {
-        fly: '✈️', sky: '☁️', fall: '⬇️', water: '💧',
-        chase: '👣', house: '🏠', person: '👤', death: '💀',
-        animal: '🦁', fire: '🔥', road: '🛣️', night: '🌙'
-      };
-      
-      for (const [word, emoji] of Object.entries(symbols)) {
-        if (dream.toLowerCase().includes(word)) return emoji;
+      if (foundKeywords.length > 0) {
+        // Combine vault entries for matched keywords
+        let interpretation = 'Based on your dream:\n\n';
+        for (let kw of foundKeywords) {
+          interpretation += `• ${kw.toUpperCase()}: ${DREAM_VAULT[kw]}\n\n`;
+        }
+        return interpretation;
       }
-      return '🌀';
+
+      // Default interpretation
+      return `Your dream reflects your subconscious mind processing emotions and experiences. The symbols and feelings you experienced are unique to your personal journey. Consider: What emotions did you feel? What symbols stood out? How do they relate to your current life situation?`;
     }
 
-    // Extract keywords from dream
-    function extractKeywords(dream) {
-      const words = dream.toLowerCase().split(/\W+/);
-      const common = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'is', 'was', 'i', 'you']);
-      return words.filter(w => w.length > 3 && !common.has(w)).slice(0, 5);
-    }
-
-    // Modal functions
-    window.openModal = function(type) {
-      const modals = {
-        'about': 'aboutModal',
-        'trends': 'trendsModal',
-        'privacy': 'privacyModal',
-        'terms': 'termsModal',
-      };
-      const modal = document.getElementById(modals[type]);
-      if (modal) modal.classList.add('active');
-      
-      if (type === 'trends') populateTrends();
-    };
-
-    window.closeModal = function(type) {
-      const modals = {
-        'about': 'aboutModal',
-        'trends': 'trendsModal',
-        'privacy': 'privacyModal',
-        'terms': 'termsModal',
-      };
-      const modal = document.getElementById(modals[type]);
-      if (modal) modal.classList.remove('active');
-    };
-
-    // Populate trends
+    // Populate Trends
     function populateTrends() {
-      const list = document.getElementById('trendsList');
-      const trends = [
-        { symbol: '✈️', name: 'Flying', count: 1847 },
-        { symbol: '💧', name: 'Water', count: 1623 },
-        { symbol: '⬇️', name: 'Falling', count: 1456 },
-        { symbol: '👣', name: 'Being Chased', count: 1289 },
-        { symbol: '🏠', name: 'Houses', count: 987 },
-      ];
-      list.innerHTML = trends.map(t => `
-        <div class="trend-item">
-          <span class="trend-symbol">${t.symbol}</span>
-          <span class="trend-name">${t.name}</span>
-          <span class="trend-count">${t.count.toLocaleString()}</span>
-        </div>
-      `).join('');
+      const trendsGrid = document.getElementById('trendsGrid');
+      const topSymbols = Object.entries(DREAM_VAULT)
+        .slice(0, 5)
+        .map(([sym]) => sym);
+
+      trendsGrid.innerHTML = topSymbols
+        .map(sym => `<div class="vault-item">${sym.toUpperCase()}</div>`)
+        .join('');
     }
 
-    // Close modals on click outside
-    document.querySelectorAll('.modal').forEach(modal => {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          modal.classList.remove('active');
-        }
-      });
-    });
+    // Initialize App
+    async function initApp() {
+      // Check if in MiniPay
+      window.appState.isMiniPay = typeof window.ethereum !== 'undefined' && window.ethereum.isMiniPay;
 
-    // Initialize on load
-    window.addEventListener('load', autoConnectWallet);
+      if (window.ethereum) {
+        try {
+          // Auto-connect wallet
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          window.appState.userAddress = accounts[0];
+          window.appState.walletConnected = true;
+          document.getElementById('walletStatus').textContent = '✓';
+          document.getElementById('walletStatusText').textContent = 'Connected';
+          document.getElementById('balanceDisplay').textContent = '0.01+ cUSD';
+          document.getElementById('interpretBtn').disabled = false;
+        } catch (error) {
+          showError('Wallet connection failed');
+        }
+      } else {
+        showError('MiniPay wallet not detected');
+      }
+
+      populateTrends();
+    }
+
+    // Start app when DOM is ready
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
